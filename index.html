@@ -1,13 +1,881 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LinguaBridge AI</title>
-    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/index.tsx"></script>
-  </body>
-</html>
+import { useState, useRef, useEffect } from "react";
+
+const LANGS = {
+  en: { name:"English", label:"English", nav_login:"Login", nav_try:"Try Free →", nav_home:"Home", nav_dashboard:"Dashboard", hero_tag:"For every Indian citizen", hero_h1_1:"Your civic voice,", hero_h1_2:"amplified by AI", hero_sub:"Speak, type, or photograph your issue — get a formal complaint letter instantly.", btn_generate:"Generate Complaint →", btn_login:"Login for full access", stat1:"14+ Languages", stat2:"50K+ Complaints", stat3:"Trusted & Verified", stat4:"Free Forever", templates_title:"Readymade Templates", templates_sub:"Pick a common issue — complaint pre-filled for you", features_title:"Everything you need", features_sub:"Designed for every Indian, in every language", how_title:"How it works", how_sub:"From problem to formal complaint in under 30 seconds", reviews_title:"What people say", reviews_sub:"Real feedback from citizens across India", cta_title:"Ready to file your complaint?", cta_sub:"Free · Fast · All Indian languages", cta_btn:"Start now →", form_title:"Describe Your Complaint", form_sub:"Fill in the details — write in any language.", form_name:"YOUR NAME", form_loc:"LOCATION", form_desc:"PROBLEM DESCRIPTION", form_support:"SUPPORTING DETAILS", form_name_ph:"Enter your full name", form_loc_ph:"Enter your area, city or address", form_desc_ph:"Describe the problem in detail… (optional if photo uploaded)", form_support_ph:"Any additional details (optional)…", form_required:"REQUIRED FIELDS", form_optional:"OPTIONAL", btn_submit:"🔥 Generate Complaint Letter", btn_speak:"🎙️ Speak", btn_listening:"🔴 Listening…", btn_photo:"📸 Upload Photo", close:"✕ Close", back:"← Back", dash_welcome:"Welcome,", dash_welcome_back:"Welcome back,", dash_filed:"complaints filed", tab_write:"✍️ Write", tab_templates:"📋 Templates", tab_history:"📁 History", tab_simplify:"🔄 Simplify Letter", tpl_tap:"tap to use", tpl_selected:"✓ Selected", tpl_clear:"✕ Clear", tpl_edit:"✍️ Edit & Generate →", hist_title:"Complaint History", result_severity:"Severity", result_authority:"Nearest Authority", result_submission:"Submission", result_type:"Issue Type", result_lang:"Language", result_formats:"Complaint Formats", result_copy:"⧉ Copy", result_copied:"✓ Copied!", result_edit:"✏️ Edit", result_done:"✓ Done", result_reset:"↺ Reset", result_whatsapp:"💬 WhatsApp", result_trans:"🌐 Native Translation", result_trans_show:"Show Translation ▼", result_trans_hide:"Hide ▲", result_schemes:"📜 Govt. Schemes / Yojana", result_alt:"📌 Alternative Subject Lines", login_title:"Create your account", login_sub:"Save complaint history and access all features.", login_name:"Your Name", login_email:"Email", login_name_ph:"e.g. Ramesh Kumar", login_email_ph:"you@email.com", login_btn:"Login / Sign up", login_skip:"Continue without login", err_empty:"Please fill in your name and location. Add a description or upload a photo.", footer:"Built for Indian citizens ·", simplify_title:"Letter Simplifier & Translator", simplify_sub:"Paste any complex official letter — get a plain-language summary, simplified version, and translation.", simplify_paste:"PASTE YOUR LETTER HERE", simplify_paste_ph:"Paste any complex government letter, legal notice, bank letter, insurance document…", simplify_target:"TRANSLATE INTO", simplify_btn:"🔄 Simplify & Translate", simplify_summary:"📋 Plain Summary", simplify_simple:"📝 Simplified Letter", simplify_native:"🌐 Translation", simplify_key:"🔑 Key Points", simplify_action:"⚡ Action Required", simplify_deadline:"⏰ Deadline / Date", simplify_sender:"🏛 Sender", simplify_empty:"Please paste a letter to simplify." },
+  hi: { name:"हिन्दी", label:"हिन्दी", nav_login:"लॉगिन", nav_try:"मुफ़्त आज़माएं →", nav_home:"होम", nav_dashboard:"डैशबोर्ड", hero_tag:"हर भारतीय नागरिक के लिए", hero_h1_1:"आपकी नागरिक आवाज़,", hero_h1_2:"AI द्वारा मज़बूत", hero_sub:"बोलें, टाइप करें, या फ़ोटो अपलोड करें — तुरंत शिकायत पत्र पाएं।", btn_generate:"शिकायत बनाएं →", btn_login:"पूरी सुविधा के लिए लॉगिन करें", stat1:"14+ भाषाएं", stat2:"50K+ शिकायतें", stat3:"विश्वसनीय & सत्यापित", stat4:"हमेशा मुफ़्त", templates_title:"तैयार टेम्पलेट", templates_sub:"सामान्य समस्या चुनें — शिकायत अपने आप भरेगी", features_title:"सब कुछ जो चाहिए", features_sub:"हर भारतीय के लिए, हर भाषा में", how_title:"कैसे काम करता है", how_sub:"30 सेकंड में शिकायत तैयार", reviews_title:"लोग क्या कहते हैं", reviews_sub:"भारत भर के नागरिकों की प्रतिक्रिया", cta_title:"शिकायत दर्ज करने के लिए तैयार?", cta_sub:"मुफ़्त · तेज़ · सभी भारतीय भाषाएं", cta_btn:"अभी शुरू करें →", form_title:"अपनी शिकायत बताएं", form_sub:"विवरण भरें — किसी भी भाषा में लिखें।", form_name:"आपका नाम", form_loc:"स्थान", form_desc:"समस्या का विवरण", form_support:"अतिरिक्त विवरण", form_name_ph:"अपना पूरा नाम लिखें", form_loc_ph:"अपना क्षेत्र, शहर या पता", form_desc_ph:"समस्या का विवरण (फ़ोटो अपलोड हो तो ज़रूरी नहीं)…", form_support_ph:"कोई अतिरिक्त जानकारी (वैकल्पिक)…", form_required:"आवश्यक जानकारी", form_optional:"वैकल्पिक", btn_submit:"🔥 शिकायत पत्र बनाएं", btn_speak:"🎙️ बोलें", btn_listening:"🔴 सुन रहा है…", btn_photo:"📸 फ़ोटो अपलोड करें", close:"✕ बंद करें", back:"← वापस", dash_welcome:"स्वागत,", dash_welcome_back:"वापसी पर स्वागत,", dash_filed:"शिकायतें दर्ज", tab_write:"✍️ लिखें", tab_templates:"📋 टेम्पलेट", tab_history:"📁 इतिहास", tab_simplify:"🔄 पत्र सरल करें", tpl_tap:"चुनें", tpl_selected:"✓ चुना गया", tpl_clear:"✕ हटाएं", tpl_edit:"✍️ संपादित करें →", hist_title:"शिकायत इतिहास", result_severity:"गंभीरता", result_authority:"निकटतम अधिकारी", result_submission:"जमा करने का तरीका", result_type:"समस्या का प्रकार", result_lang:"भाषा", result_formats:"शिकायत प्रारूप", result_copy:"⧉ कॉपी", result_copied:"✓ कॉपी हो गया!", result_edit:"✏️ संपादित करें", result_done:"✓ हो गया", result_reset:"↺ रीसेट", result_whatsapp:"💬 व्हाट्सएप", result_trans:"🌐 मूल भाषा अनुवाद", result_trans_show:"अनुवाद दिखाएं ▼", result_trans_hide:"छिपाएं ▲", result_schemes:"📜 सरकारी योजनाएं", result_alt:"📌 वैकल्पिक विषय पंक्तियां", login_title:"अपना खाता बनाएं", login_sub:"शिकायत इतिहास सहेजें और सभी सुविधाएं पाएं।", login_name:"आपका नाम", login_email:"ईमेल", login_name_ph:"जैसे रमेश कुमार", login_email_ph:"aap@email.com", login_btn:"लॉगिन / साइन अप", login_skip:"लॉगिन के बिना जारी रखें", err_empty:"कृपया नाम और स्थान भरें। विवरण लिखें या फ़ोटो अपलोड करें।", footer:"भारतीय नागरिकों के लिए बनाया गया ·", simplify_title:"पत्र सरलीकरण & अनुवाद", simplify_sub:"कोई भी जटिल सरकारी पत्र पेस्ट करें — सरल भाषा में सारांश, सरलीकृत संस्करण और अनुवाद पाएं।", simplify_paste:"पत्र यहाँ पेस्ट करें", simplify_paste_ph:"कोई भी सरकारी पत्र, कानूनी नोटिस, बैंक पत्र पेस्ट करें…", simplify_target:"इस भाषा में अनुवाद करें", simplify_btn:"🔄 सरल करें & अनुवाद करें", simplify_summary:"📋 सरल सारांश", simplify_simple:"📝 सरलीकृत पत्र", simplify_native:"🌐 अनुवाद", simplify_key:"🔑 मुख्य बिंदु", simplify_action:"⚡ क्या करना है", simplify_deadline:"⏰ समय सीमा", simplify_sender:"🏛 प्रेषक", simplify_empty:"कृपया सरल करने के लिए पत्र पेस्ट करें।" },
+  mr: { name:"मराठी", label:"मराठी", nav_login:"लॉगिन", nav_try:"विनामूल्य →", nav_home:"मुख्यपृष्ठ", nav_dashboard:"डॅशबोर्ड", hero_tag:"प्रत्येक भारतीय नागरिकासाठी", hero_h1_1:"तुमचा नागरी आवाज,", hero_h1_2:"AI द्वारे बळकट", hero_sub:"बोला, टाइप करा, किंवा फोटो अपलोड करा — तात्काळ तक्रार पत्र मिळवा.", btn_generate:"तक्रार तयार करा →", btn_login:"संपूर्ण प्रवेशासाठी लॉगिन करा", stat1:"14+ भाषा", stat2:"50K+ तक्रारी", stat3:"विश्वसनीय & प्रमाणित", stat4:"नेहमी विनामूल्य", templates_title:"तयार टेम्पलेट", templates_sub:"सामान्य समस्या निवडा", features_title:"सर्व काही जे हवे", features_sub:"प्रत्येक भारतीयासाठी, प्रत्येक भाषेत", how_title:"कसे काम करते", how_sub:"30 सेकंदात तक्रार तयार", reviews_title:"लोक काय म्हणतात", reviews_sub:"भारतभरातील नागरिकांचा अभिप्राय", cta_title:"तक्रार दाखल करण्यासाठी तयार?", cta_sub:"विनामूल्य · वेगवान · सर्व भारतीय भाषा", cta_btn:"आता सुरू करा →", form_title:"तुमची तक्रार सांगा", form_sub:"तपशील भरा — कोणत्याही भाषेत लिहा.", form_name:"तुमचे नाव", form_loc:"स्थान", form_desc:"समस्येचे वर्णन", form_support:"अतिरिक्त तपशील", form_name_ph:"तुमचे पूर्ण नाव लिहा", form_loc_ph:"तुमचा परिसर, शहर किंवा पत्ता", form_desc_ph:"समस्येचे वर्णन (फोटो असल्यास आवश्यक नाही)…", form_support_ph:"काही अतिरिक्त माहिती (पर्यायी)…", form_required:"आवश्यक माहिती", form_optional:"पर्यायी", btn_submit:"🔥 तक्रार पत्र तयार करा", btn_speak:"🎙️ बोला", btn_listening:"🔴 ऐकत आहे…", btn_photo:"📸 फोटो अपलोड करा", close:"✕ बंद करा", back:"← मागे", dash_welcome:"स्वागत,", dash_welcome_back:"पुन्हा स्वागत,", dash_filed:"तक्रारी दाखल", tab_write:"✍️ लिहा", tab_templates:"📋 टेम्पलेट", tab_history:"📁 इतिहास", tab_simplify:"🔄 पत्र सरल करा", tpl_tap:"निवडा", tpl_selected:"✓ निवडले", tpl_clear:"✕ काढा", tpl_edit:"✍️ संपादित करा →", hist_title:"तक्रार इतिहास", result_severity:"तीव्रता", result_authority:"जवळचे अधिकारी", result_submission:"सादर करण्याचा मार्ग", result_type:"समस्येचा प्रकार", result_lang:"भाषा", result_formats:"तक्रार स्वरूप", result_copy:"⧉ कॉपी", result_copied:"✓ कॉपी झाले!", result_edit:"✏️ संपादित करा", result_done:"✓ झाले", result_reset:"↺ रीसेट", result_whatsapp:"💬 व्हाट्सअॅप", result_trans:"🌐 मूळ भाषा अनुवाद", result_trans_show:"अनुवाद दाखवा ▼", result_trans_hide:"लपवा ▲", result_schemes:"📜 सरकारी योजना", result_alt:"📌 पर्यायी विषय ओळी", login_title:"तुमचे खाते तयार करा", login_sub:"तक्रार इतिहास साठवा आणि सर्व सुविधा मिळवा.", login_name:"तुमचे नाव", login_email:"ईमेल", login_name_ph:"उदा. रमेश कुमार", login_email_ph:"tum@email.com", login_btn:"लॉगिन / साइन अप", login_skip:"लॉगिनशिवाय पुढे जा", err_empty:"कृपया नाव आणि स्थान भरा. वर्णन लिहा किंवा फोटो अपलोड करा.", footer:"भारतीय नागरिकांसाठी बनवले ·", simplify_title:"पत्र सरलीकरण & अनुवाद", simplify_sub:"कोणतेही जटिल पत्र पेस्ट करा — सोप्या भाषेत सारांश आणि अनुवाद मिळवा.", simplify_paste:"पत्र येथे पेस्ट करा", simplify_paste_ph:"कोणतेही सरकारी पत्र, कायदेशीर नोटीस, बँक पत्र पेस्ट करा…", simplify_target:"या भाषेत अनुवाद करा", simplify_btn:"🔄 सरल करा & अनुवाद करा", simplify_summary:"📋 सरल सारांश", simplify_simple:"📝 सरलीकृत पत्र", simplify_native:"🌐 अनुवाद", simplify_key:"🔑 मुख्य मुद्दे", simplify_action:"⚡ काय करायचे", simplify_deadline:"⏰ मुदत", simplify_sender:"🏛 प्रेषक", simplify_empty:"कृपया सरल करण्यासाठी पत्र पेस्ट करा." },
+  ta: { name:"தமிழ்", label:"தமிழ்", nav_login:"உள்நுழைவு", nav_try:"இலவசமாக →", nav_home:"முகப்பு", nav_dashboard:"டாஷ்போர்டு", hero_tag:"ஒவ்வொரு இந்திய குடிமகனுக்கும்", hero_h1_1:"உங்கள் குடிமை குரல்,", hero_h1_2:"AI ஆல் வலுப்படுத்தப்பட்டது", hero_sub:"பேசுங்கள், தட்டச்சு செய்யுங்கள் அல்லது புகைப்படம் எடுங்கள் — உடனே புகார் கடிதம் பெறுங்கள்.", btn_generate:"புகார் உருவாக்கு →", btn_login:"முழு அணுகலுக்கு உள்நுழைய", stat1:"14+ மொழிகள்", stat2:"50K+ புகார்கள்", stat3:"நம்பகமான & சரிபார்க்கப்பட்ட", stat4:"எப்போதும் இலவசம்", templates_title:"தயார் வார்ப்புருக்கள்", templates_sub:"பொதுவான சிக்கலை தேர்ந்தெடுங்கள்", features_title:"தேவையான அனைத்தும்", features_sub:"ஒவ்வொரு இந்தியருக்கும், ஒவ்வொரு மொழியிலும்", how_title:"எப்படி செயல்படுகிறது", how_sub:"30 வினாடிகளில் புகார் தயார்", reviews_title:"மக்கள் என்ன சொல்கிறார்கள்", reviews_sub:"இந்தியா முழுவதும் குடிமக்களின் கருத்துக்கள்", cta_title:"புகார் பதிவு செய்ய தயாரா?", cta_sub:"இலவசம் · வேகமான · அனைத்து இந்திய மொழிகள்", cta_btn:"இப்போது தொடங்கு →", form_title:"உங்கள் புகாரை விவரிக்கவும்", form_sub:"விவரங்களை நிரப்பவும் — எந்த மொழியிலும் எழுதலாம்.", form_name:"உங்கள் பெயர்", form_loc:"இடம்", form_desc:"சிக்கல் விவரம்", form_support:"கூடுதல் விவரங்கள்", form_name_ph:"உங்கள் முழு பெயரை உள்ளிடவும்", form_loc_ph:"உங்கள் பகுதி, நகரம் அல்லது முகவரி", form_desc_ph:"சிக்கலை விரிவாக விவரிக்கவும் (புகைப்படம் இருந்தால் தேவையில்லை)…", form_support_ph:"கூடுதல் தகவல் (விருப்பமான)…", form_required:"தேவையான தகவல்கள்", form_optional:"விருப்பமான", btn_submit:"🔥 புகார் கடிதம் உருவாக்கு", btn_speak:"🎙️ பேசுங்கள்", btn_listening:"🔴 கேட்கிறது…", btn_photo:"📸 புகைப்படம் பதிவேற்று", close:"✕ மூடு", back:"← திரும்பு", dash_welcome:"வரவேற்கிறோம்,", dash_welcome_back:"மீண்டும் வரவேற்கிறோம்,", dash_filed:"புகார்கள் பதிவு", tab_write:"✍️ எழுது", tab_templates:"📋 வார்ப்புரு", tab_history:"📁 வரலாறு", tab_simplify:"🔄 கடிதம் எளிதாக்கு", tpl_tap:"தேர்ந்தெடு", tpl_selected:"✓ தேர்ந்தெடுக்கப்பட்டது", tpl_clear:"✕ நீக்கு", tpl_edit:"✍️ திருத்தி உருவாக்கு →", hist_title:"புகார் வரலாறு", result_severity:"தீவிரம்", result_authority:"அருகிலுள்ள அதிகாரி", result_submission:"சமர்ப்பிக்கும் முறை", result_type:"சிக்கல் வகை", result_lang:"மொழி", result_formats:"புகார் வடிவங்கள்", result_copy:"⧉ நகல்", result_copied:"✓ நகல் எடுக்கப்பட்டது!", result_edit:"✏️ திருத்து", result_done:"✓ முடிந்தது", result_reset:"↺ மீட்டமை", result_whatsapp:"💬 வாட்ஸ்அப்", result_trans:"🌐 தாய்மொழி மொழிபெயர்ப்பு", result_trans_show:"மொழிபெயர்ப்பு காட்டு ▼", result_trans_hide:"மறை ▲", result_schemes:"📜 அரசு திட்டங்கள்", result_alt:"📌 மாற்று தலைப்பு வரிகள்", login_title:"உங்கள் கணக்கை உருவாக்கவும்", login_sub:"புகார் வரலாற்றை சேமித்து அனைத்து அம்சங்களையும் அணுகவும்.", login_name:"உங்கள் பெயர்", login_email:"மின்னஞ்சல்", login_name_ph:"எ.கா. ரமேஷ் குமார்", login_email_ph:"neenga@email.com", login_btn:"உள்நுழைவு / பதிவு", login_skip:"உள்நுழைவு இல்லாமல் தொடரவும்", err_empty:"பெயர் மற்றும் இடம் நிரப்பவும். விவரம் அல்லது புகைப்படம் சேர்க்கவும்.", footer:"இந்திய குடிமக்களுக்காக கட்டமைக்கப்பட்டது ·", simplify_title:"கடிதம் எளிதாக்கல் & மொழிபெயர்ப்பு", simplify_sub:"எந்த சிக்கலான கடிதத்தையும் ஒட்டுங்கள் — எளிய மொழியில் சுருக்கம் மற்றும் மொழிபெயர்ப்பு பெறுங்கள்.", simplify_paste:"கடிதத்தை இங்கே ஒட்டுங்கள்", simplify_paste_ph:"எந்த அரசு கடிதம், சட்ட நோட்டீஸ், வங்கி கடிதம் ஒட்டுங்கள்…", simplify_target:"இந்த மொழியில் மொழிபெயர்க்கவும்", simplify_btn:"🔄 எளிதாக்கு & மொழிபெயர்", simplify_summary:"📋 எளிய சுருக்கம்", simplify_simple:"📝 எளிதாக்கப்பட்ட கடிதம்", simplify_native:"🌐 மொழிபெயர்ப்பு", simplify_key:"🔑 முக்கிய புள்ளிகள்", simplify_action:"⚡ செய்ய வேண்டியது", simplify_deadline:"⏰ கடைசி தேதி", simplify_sender:"🏛 அனுப்புநர்", simplify_empty:"தயவுசெய்து எளிதாக்க கடிதம் ஒட்டுங்கள்." },
+  te: { name:"తెలుగు", label:"తెలుగు", nav_login:"లాగిన్", nav_try:"ఉచితంగా →", nav_home:"హోమ్", nav_dashboard:"డాష్‌బోర్డ్", hero_tag:"ప్రతి భారతీయ పౌరుడికి", hero_h1_1:"మీ పౌర స్వరం,", hero_h1_2:"AI చేత బలోపేతం", hero_sub:"మాట్లాడండి, టైప్ చేయండి లేదా ఫోటో తీయండి — వెంటనే ఫిర్యాదు లేఖ పొందండి.", btn_generate:"ఫిర్యాదు రూపొందించండి →", btn_login:"పూర్తి యాక్సెస్‌కు లాగిన్", stat1:"14+ భాషలు", stat2:"50K+ ఫిర్యాదులు", stat3:"విశ్వసనీయ & ధృవీకరించబడిన", stat4:"ఎప్పటికీ ఉచితం", templates_title:"సిద్ధ టెంప్లేట్లు", templates_sub:"సాధారణ సమస్య ఎంచుకోండి", features_title:"అన్నీ అవసరం", features_sub:"ప్రతి భారతీయుడికి, ప్రతి భాషలో", how_title:"ఎలా పని చేస్తుంది", how_sub:"30 సెకన్లలో ఫిర్యాదు సిద్ధం", reviews_title:"ప్రజలు ఏమంటున్నారు", reviews_sub:"భారతదేశం అంతటా పౌరుల అభిప్రాయాలు", cta_title:"ఫిర్యాదు దాఖలు చేయడానికి సిద్ధంగా ఉన్నారా?", cta_sub:"ఉచితం · వేగవంతం · అన్ని భారతీయ భాషలు", cta_btn:"ఇప్పుడే ప్రారంభించండి →", form_title:"మీ ఫిర్యాదు వివరించండి", form_sub:"వివరాలు నింపండి — ఏ భాషలోనైనా రాయండి.", form_name:"మీ పేరు", form_loc:"స్థానం", form_desc:"సమస్య వివరణ", form_support:"అదనపు వివరాలు", form_name_ph:"మీ పూర్తి పేరు నమోదు చేయండి", form_loc_ph:"మీ ప్రాంతం, నగరం లేదా చిరునామా", form_desc_ph:"సమస్యను వివరంగా వివరించండి (ఫోటో అప్‌లోడ్ చేస్తే అవసరం లేదు)…", form_support_ph:"అదనపు సమాచారం (ఐచ్ఛికం)…", form_required:"అవసరమైన సమాచారం", form_optional:"ఐచ్ఛికం", btn_submit:"🔥 ఫిర్యాదు లేఖ రూపొందించండి", btn_speak:"🎙️ మాట్లాడండి", btn_listening:"🔴 వింటోంది…", btn_photo:"📸 ఫోటో అప్‌లోడ్ చేయండి", close:"✕ మూసివేయి", back:"← వెనుకకు", dash_welcome:"స్వాగతం,", dash_welcome_back:"తిరిగి స్వాగతం,", dash_filed:"ఫిర్యాదులు దాఖలు", tab_write:"✍️ రాయండి", tab_templates:"📋 టెంప్లేట్లు", tab_history:"📁 చరిత్ర", tab_simplify:"🔄 లేఖ సరళీకరించు", tpl_tap:"ఎంచుకోండి", tpl_selected:"✓ ఎంచుకోబడింది", tpl_clear:"✕ తొలగించు", tpl_edit:"✍️ సంపాదించు & రూపొందించు →", hist_title:"ఫిర్యాదు చరిత్ర", result_severity:"తీవ్రత", result_authority:"సమీప అధికారి", result_submission:"సమర్పణ విధానం", result_type:"సమస్య రకం", result_lang:"భాష", result_formats:"ఫిర్యాదు ఆకృతులు", result_copy:"⧉ కాపీ", result_copied:"✓ కాపీ అయింది!", result_edit:"✏️ సవరించు", result_done:"✓ పూర్తయింది", result_reset:"↺ రీసెట్", result_whatsapp:"💬 వాట్సాప్", result_trans:"🌐 స్థానిక అనువాదం", result_trans_show:"అనువాదం చూపించు ▼", result_trans_hide:"దాచు ▲", result_schemes:"📜 ప్రభుత్వ పథకాలు", result_alt:"📌 ప్రత్యామ్నాయ విషయ పంక్తులు", login_title:"మీ ఖాతా సృష్టించండి", login_sub:"ఫిర్యాదు చరిత్ర సేవ్ చేయండి.", login_name:"మీ పేరు", login_email:"ఇమెయిల్", login_name_ph:"ఉదా. రమేష్ కుమార్", login_email_ph:"meeru@email.com", login_btn:"లాగిన్ / సైన్ అప్", login_skip:"లాగిన్ లేకుండా కొనసాగండి", err_empty:"పేరు మరియు స్థానం నింపండి. వివరణ లేదా ఫోటో జోడించండి.", footer:"భారతీయ పౌరుల కోసం నిర్మించబడింది ·", simplify_title:"లేఖ సరళీకరణ & అనువాదం", simplify_sub:"ఏదైనా క్లిష్టమైన లేఖ అతికించండి.", simplify_paste:"లేఖను ఇక్కడ అతికించండి", simplify_paste_ph:"ఏదైనా ప్రభుత్వ లేఖ, చట్టపరమైన నోటీసు, బ్యాంక్ లేఖ అతికించండి…", simplify_target:"ఈ భాషలోకి అనువదించండి", simplify_btn:"🔄 సరళీకరించు & అనువదించు", simplify_summary:"📋 సరళ సారాంశం", simplify_simple:"📝 సరళీకరించిన లేఖ", simplify_native:"🌐 అనువాదం", simplify_key:"🔑 ముఖ్యమైన అంశాలు", simplify_action:"⚡ ఏం చేయాలి", simplify_deadline:"⏰ గడువు తేదీ", simplify_sender:"🏛 పంపిన వారు", simplify_empty:"దయచేసి సరళీకరించడానికి లేఖ అతికించండి." },
+  kn: { name:"ಕನ್ನಡ", label:"ಕನ್ನಡ", nav_login:"ಲಾಗಿನ್", nav_try:"ಉಚಿತವಾಗಿ →", nav_home:"ಮುಖಪುಟ", nav_dashboard:"ಡ್ಯಾಶ್‌ಬೋರ್ಡ್", hero_tag:"ಪ್ರತಿ ಭಾರತೀಯ ನಾಗರಿಕರಿಗೆ", hero_h1_1:"ನಿಮ್ಮ ನಾಗರಿಕ ಧ್ವನಿ,", hero_h1_2:"AI ಯಿಂದ ಬಲಗೊಂಡಿದೆ", hero_sub:"ಮಾತನಾಡಿ, ಟೈಪ್ ಮಾಡಿ ಅಥವಾ ಫೋಟೋ ತೆಗೆಯಿರಿ — ತಕ್ಷಣ ದೂರು ಪತ್ರ ಪಡೆಯಿರಿ.", btn_generate:"ದೂರು ರಚಿಸಿ →", btn_login:"ಪೂರ್ಣ ಪ್ರವೇಶಕ್ಕೆ ಲಾಗಿನ್", stat1:"14+ ಭಾಷೆಗಳು", stat2:"50K+ ದೂರುಗಳು", stat3:"ವಿಶ್ವಾಸಾರ್ಹ & ಪರಿಶೀಲಿತ", stat4:"ಯಾವಾಗಲೂ ಉಚಿತ", templates_title:"ಸಿದ್ಧ ಟೆಂಪ್ಲೇಟ್‌ಗಳು", templates_sub:"ಸಾಮಾನ್ಯ ಸಮಸ್ಯೆ ಆಯ್ಕೆ ಮಾಡಿ", features_title:"ಎಲ್ಲವೂ ಅಗತ್ಯ", features_sub:"ಪ್ರತಿ ಭಾರತೀಯರಿಗೆ, ಪ್ರತಿ ಭಾಷೆಯಲ್ಲಿ", how_title:"ಹೇಗೆ ಕಾರ್ಯನಿರ್ವಹಿಸುತ್ತದೆ", how_sub:"30 ಸೆಕೆಂಡ್‌ಗಳಲ್ಲಿ ದೂರು ಸಿದ್ಧ", reviews_title:"ಜನರು ಏನು ಹೇಳುತ್ತಾರೆ", reviews_sub:"ಭಾರತಾದ್ಯಂತ ನಾಗರಿಕರ ಅಭಿಪ್ರಾಯ", cta_title:"ದೂರು ದಾಖಲಿಸಲು ಸಿದ್ಧರಾಗಿದ್ದೀರಾ?", cta_sub:"ಉಚಿತ · ವೇಗವಾದ · ಎಲ್ಲ ಭಾರತೀಯ ಭಾಷೆಗಳು", cta_btn:"ಈಗಲೇ ಪ್ರಾರಂಭಿಸಿ →", form_title:"ನಿಮ್ಮ ದೂರನ್ನು ವಿವರಿಸಿ", form_sub:"ವಿವರಗಳನ್ನು ಭರ್ತಿ ಮಾಡಿ — ಯಾವುದೇ ಭಾಷೆಯಲ್ಲಿ ಬರೆಯಿರಿ.", form_name:"ನಿಮ್ಮ ಹೆಸರು", form_loc:"ಸ್ಥಳ", form_desc:"ಸಮಸ್ಯೆ ವಿವರಣೆ", form_support:"ಹೆಚ್ಚುವರಿ ವಿವರಗಳು", form_name_ph:"ನಿಮ್ಮ ಪೂರ್ಣ ಹೆಸರು ನಮೂದಿಸಿ", form_loc_ph:"ನಿಮ್ಮ ಪ್ರದೇಶ, ನಗರ ಅಥವಾ ವಿಳಾಸ", form_desc_ph:"ಸಮಸ್ಯೆಯನ್ನು ವಿವರವಾಗಿ ವಿವರಿಸಿ (ಫೋಟೋ ಅಪ್‌ಲೋಡ್ ಮಾಡಿದರೆ ಅಗತ್ಯವಿಲ್ಲ)…", form_support_ph:"ಯಾವುದೇ ಹೆಚ್ಚುವರಿ ಮಾಹಿತಿ (ಐಚ್ಛಿಕ)…", form_required:"ಅಗತ್ಯ ಮಾಹಿತಿ", form_optional:"ಐಚ್ಛಿಕ", btn_submit:"🔥 ದೂರು ಪತ್ರ ರಚಿಸಿ", btn_speak:"🎙️ ಮಾತನಾಡಿ", btn_listening:"🔴 ಕೇಳುತ್ತಿದೆ…", btn_photo:"📸 ಫೋಟೋ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ", close:"✕ ಮುಚ್ಚಿ", back:"← ಹಿಂದೆ", dash_welcome:"ಸ್ವಾಗತ,", dash_welcome_back:"ಮತ್ತೆ ಸ್ವಾಗತ,", dash_filed:"ದೂರುಗಳು ದಾಖಲು", tab_write:"✍️ ಬರೆಯಿರಿ", tab_templates:"📋 ಟೆಂಪ್ಲೇಟ್‌ಗಳು", tab_history:"📁 ಇತಿಹಾಸ", tab_simplify:"🔄 ಪತ್ರ ಸರಳಗೊಳಿಸಿ", tpl_tap:"ಆಯ್ಕೆ ಮಾಡಿ", tpl_selected:"✓ ಆಯ್ಕೆಯಾಗಿದೆ", tpl_clear:"✕ ತೆಗೆದುಹಾಕಿ", tpl_edit:"✍️ ಸಂಪಾದಿಸಿ & ರಚಿಸಿ →", hist_title:"ದೂರು ಇತಿಹಾಸ", result_severity:"ತೀವ್ರತೆ", result_authority:"ಸಮೀಪದ ಅಧಿಕಾರಿ", result_submission:"ಸಲ್ಲಿಕೆ ವಿಧಾನ", result_type:"ಸಮಸ್ಯೆ ಪ್ರಕಾರ", result_lang:"ಭಾಷೆ", result_formats:"ದೂರು ಸ್ವರೂಪಗಳು", result_copy:"⧉ ನಕಲಿಸಿ", result_copied:"✓ ನಕಲಿಸಲಾಗಿದೆ!", result_edit:"✏️ ಸಂಪಾದಿಸಿ", result_done:"✓ ಮುಗಿಯಿತು", result_reset:"↺ ಮರುಹೊಂದಿಸಿ", result_whatsapp:"💬 ವಾಟ್ಸ್‌ಆ್ಯಪ್", result_trans:"🌐 ಸ್ಥಳೀಯ ಅನುವಾದ", result_trans_show:"ಅನುವಾದ ತೋರಿಸಿ ▼", result_trans_hide:"ಮರೆಮಾಡಿ ▲", result_schemes:"📜 ಸರ್ಕಾರಿ ಯೋಜನೆಗಳು", result_alt:"📌 ಪರ್ಯಾಯ ವಿಷಯ ಸಾಲುಗಳು", login_title:"ನಿಮ್ಮ ಖಾತೆ ರಚಿಸಿ", login_sub:"ದೂರು ಇತಿಹಾಸ ಉಳಿಸಿ.", login_name:"ನಿಮ್ಮ ಹೆಸರು", login_email:"ಇಮೇಲ್", login_name_ph:"ಉದಾ. ರಮೇಶ್ ಕುಮಾರ್", login_email_ph:"nimma@email.com", login_btn:"ಲಾಗಿನ್ / ಸೈನ್ ಅಪ್", login_skip:"ಲಾಗಿನ್ ಇಲ್ಲದೆ ಮುಂದುವರಿಸಿ", err_empty:"ಹೆಸರು ಮತ್ತು ಸ್ಥಳ ನಮೂದಿಸಿ. ವಿವರಣೆ ಅಥವಾ ಫೋಟೋ ಸೇರಿಸಿ.", footer:"ಭಾರತೀಯ ನಾಗರಿಕರಿಗಾಗಿ ನಿರ್ಮಿಸಲಾಗಿದೆ ·", simplify_title:"ಪತ್ರ ಸರಳೀಕರಣ & ಅನುವಾದ", simplify_sub:"ಯಾವುದೇ ಸಂಕೀರ್ಣ ಪತ್ರ ಅಂಟಿಸಿ.", simplify_paste:"ಪತ್ರವನ್ನು ಇಲ್ಲಿ ಅಂಟಿಸಿ", simplify_paste_ph:"ಯಾವುದೇ ಸರ್ಕಾರಿ ಪತ್ರ, ಕಾನೂನು ನೋಟೀಸ್ ಅಂಟಿಸಿ…", simplify_target:"ಈ ಭಾಷೆಗೆ ಅನುವಾದಿಸಿ", simplify_btn:"🔄 ಸರಳಗೊಳಿಸಿ & ಅನುವಾದಿಸಿ", simplify_summary:"📋 ಸರಳ ಸಾರಾಂಶ", simplify_simple:"📝 ಸರಳೀಕೃತ ಪತ್ರ", simplify_native:"🌐 ಅನುವಾದ", simplify_key:"🔑 ಪ್ರಮುಖ ಅಂಶಗಳು", simplify_action:"⚡ ಏನು ಮಾಡಬೇಕು", simplify_deadline:"⏰ ಗಡುವು", simplify_sender:"🏛 ಕಳುಹಿಸಿದವರು", simplify_empty:"ದಯವಿಟ್ಟು ಸರಳಗೊಳಿಸಲು ಪತ್ರ ಅಂಟಿಸಿ." },
+  bn: { name:"বাংলা", label:"বাংলা", nav_login:"লগইন", nav_try:"বিনামূল্যে →", nav_home:"হোম", nav_dashboard:"ড্যাশবোর্ড", hero_tag:"প্রতিটি ভারতীয় নাগরিকের জন্য", hero_h1_1:"আপনার নাগরিক কণ্ঠস্বর,", hero_h1_2:"AI দ্বারা শক্তিশালী", hero_sub:"বলুন, টাইপ করুন বা ছবি তুলুন — তাৎক্ষণিকভাবে অভিযোগপত্র পান।", btn_generate:"অভিযোগ তৈরি করুন →", btn_login:"পূর্ণ অ্যাক্সেসের জন্য লগইন", stat1:"১৪+ ভাষা", stat2:"৫০ হাজার+ অভিযোগ", stat3:"বিশ্বস্ত ও যাচাইকৃত", stat4:"সর্বদা বিনামূল্যে", templates_title:"প্রস্তুত টেমপ্লেট", templates_sub:"সাধারণ সমস্যা বেছে নিন", features_title:"সব কিছু যা দরকার", features_sub:"প্রতিটি ভারতীয়ের জন্য, প্রতিটি ভাষায়", how_title:"কীভাবে কাজ করে", how_sub:"৩০ সেকেন্ডে অভিযোগ প্রস্তুত", reviews_title:"মানুষ কী বলছেন", reviews_sub:"সারা ভারত থেকে নাগরিকদের মতামত", cta_title:"অভিযোগ দাখিল করতে প্রস্তুত?", cta_sub:"বিনামূল্যে · দ্রুত · সব ভারতীয় ভাষা", cta_btn:"এখনই শুরু করুন →", form_title:"আপনার অভিযোগ বর্ণনা করুন", form_sub:"বিবরণ পূরণ করুন — যেকোনো ভাষায় লিখুন।", form_name:"আপনার নাম", form_loc:"অবস্থান", form_desc:"সমস্যার বিবরণ", form_support:"অতিরিক্ত বিবরণ", form_name_ph:"আপনার পুরো নাম লিখুন", form_loc_ph:"আপনার এলাকা, শহর বা ঠিকানা", form_desc_ph:"সমস্যাটি বিস্তারিতভাবে বর্ণনা করুন (ছবি আপলোড করলে প্রয়োজন নেই)…", form_support_ph:"যেকোনো অতিরিক্ত তথ্য (ঐচ্ছিক)…", form_required:"প্রয়োজনীয় তথ্য", form_optional:"ঐচ্ছিক", btn_submit:"🔥 অভিযোগপত্র তৈরি করুন", btn_speak:"🎙️ বলুন", btn_listening:"🔴 শুনছে…", btn_photo:"📸 ছবি আপলোড করুন", close:"✕ বন্ধ করুন", back:"← ফিরে যান", dash_welcome:"স্বাগতম,", dash_welcome_back:"আবার স্বাগতম,", dash_filed:"অভিযোগ দাখিল", tab_write:"✍️ লিখুন", tab_templates:"📋 টেমপ্লেট", tab_history:"📁 ইতিহাস", tab_simplify:"🔄 চিঠি সহজ করুন", tpl_tap:"বেছে নিন", tpl_selected:"✓ নির্বাচিত", tpl_clear:"✕ সরান", tpl_edit:"✍️ সম্পাদনা করুন →", hist_title:"অভিযোগের ইতিহাস", result_severity:"তীব্রতা", result_authority:"নিকটতম কর্তৃপক্ষ", result_submission:"জমা দেওয়ার পদ্ধতি", result_type:"সমস্যার ধরন", result_lang:"ভাষা", result_formats:"অভিযোগের ফরম্যাট", result_copy:"⧉ কপি", result_copied:"✓ কপি হয়েছে!", result_edit:"✏️ সম্পাদনা", result_done:"✓ সম্পন্ন", result_reset:"↺ রিসেট", result_whatsapp:"💬 হোয়াটসঅ্যাপ", result_trans:"🌐 মাতৃভাষায় অনুবাদ", result_trans_show:"অনুবাদ দেখুন ▼", result_trans_hide:"লুকান ▲", result_schemes:"📜 সরকারি প্রকল্প", result_alt:"📌 বিকল্প বিষয় লাইন", login_title:"আপনার অ্যাকাউন্ট তৈরি করুন", login_sub:"অভিযোগের ইতিহাস সংরক্ষণ করুন।", login_name:"আপনার নাম", login_email:"ইমেইল", login_name_ph:"যেমন রমেশ কুমার", login_email_ph:"aapni@email.com", login_btn:"লগইন / সাইন আপ", login_skip:"লগইন ছাড়াই চালিয়ে যান", err_empty:"নাম ও অবস্থান পূরণ করুন। বিবরণ লিখুন বা ছবি যোগ করুন।", footer:"ভারতীয় নাগরিকদের জন্য তৈরি ·", simplify_title:"চিঠি সহজকরণ ও অনুবাদ", simplify_sub:"যেকোনো জটিল চিঠি পেস্ট করুন।", simplify_paste:"চিঠি এখানে পেস্ট করুন", simplify_paste_ph:"যেকোনো সরকারি চিঠি, আইনি নোটিশ, ব্যাংক চিঠি পেস্ট করুন…", simplify_target:"এই ভাষায় অনুবাদ করুন", simplify_btn:"🔄 সহজ করুন ও অনুবাদ করুন", simplify_summary:"📋 সহজ সারাংশ", simplify_simple:"📝 সহজীকৃত চিঠি", simplify_native:"🌐 অনুবাদ", simplify_key:"🔑 মূল বিষয়", simplify_action:"⚡ কী করতে হবে", simplify_deadline:"⏰ শেষ তারিখ", simplify_sender:"🏛 প্রেরক", simplify_empty:"অনুগ্রহ করে সহজ করতে চিঠি পেস্ট করুন।" },
+  gu: { name:"ગુજરાતી", label:"ગુજરાતી", nav_login:"લૉગિન", nav_try:"મફત →", nav_home:"હોમ", nav_dashboard:"ડૅશબોર્ડ", hero_tag:"દરેક ભારતીય નાગરિક માટે", hero_h1_1:"તમારો નાગરિક અવાજ,", hero_h1_2:"AI દ્વારા સશક્ત", hero_sub:"બોલો, ટાઇપ કરો, અથવા ફોટો અપલોડ કરો — તરત ફરિયાદ પત્ર મેળવો.", btn_generate:"ફરિયાદ બનાવો →", btn_login:"સંપૂર્ણ ઍક્સેસ માટે લૉગિન", stat1:"14+ ભાષાઓ", stat2:"50K+ ફરિયાદો", stat3:"વિશ્વસનીય & ચકાસાયેલ", stat4:"હંમેશા મફત", templates_title:"તૈયાર ટેમ્પ્લેટ", templates_sub:"સામાન્ય સમસ્યા પસંદ કરો", features_title:"બધું જ જોઈએ", features_sub:"દરેક ભારતીય માટે, દરેક ભાષામાં", how_title:"કેવી રીતે કામ કરે છે", how_sub:"30 સેકન્ડમાં ફરિયાદ તૈયાર", reviews_title:"લોકો શું કહે છે", reviews_sub:"સમગ્ર ભારતના નાગરિકોનો પ્રતિભાવ", cta_title:"ફરિયાદ દાખલ કરવા તૈયાર?", cta_sub:"મફત · ઝડપી · બધી ભારતીય ભાષાઓ", cta_btn:"હવે શરૂ કરો →", form_title:"તમારી ફરિયાદ જણાવો", form_sub:"વિગતો ભરો — કોઈ પણ ભાષામાં લખો.", form_name:"તમારું નામ", form_loc:"સ્થળ", form_desc:"સમસ્યાનું વર્ણન", form_support:"વધારાની વિગતો", form_name_ph:"તમારું પૂરું નામ લખો", form_loc_ph:"તમારો વિસ્તાર, શહેર અથવા સરનામું", form_desc_ph:"સમસ્યા વિગતવાર જણાવો (ફોટો હોય તો ફરજિયાત નથી)…", form_support_ph:"કોઈ વધારાની માહિતી (વૈકલ્પિક)…", form_required:"જરૂરી માહિતી", form_optional:"વૈકલ્પિક", btn_submit:"🔥 ફરિયાદ પત્ર બનાવો", btn_speak:"🎙️ બોલો", btn_listening:"🔴 સાંભળી રહ્યા છે…", btn_photo:"📸 ફોટો અપલોડ કરો", close:"✕ બંધ કરો", back:"← પાછા", dash_welcome:"સ્વાગત,", dash_welcome_back:"ફરી સ્વાગત,", dash_filed:"ફરિયાદો દાખલ", tab_write:"✍️ લખો", tab_templates:"📋 ટેમ્પ્લેટ", tab_history:"📁 ઇતિહાસ", tab_simplify:"🔄 પત્ર સરળ કરો", tpl_tap:"પસંદ કરો", tpl_selected:"✓ પસંદ થઈ", tpl_clear:"✕ કાઢો", tpl_edit:"✍️ સંપાદિત કરો →", hist_title:"ફરિયાદ ઇતિહાસ", result_severity:"ગંભીરતા", result_authority:"નજીકના અધિકારી", result_submission:"સુપ્રત કરવાની રીત", result_type:"સમસ્યાનો પ્રકાર", result_lang:"ભાષા", result_formats:"ફરિયાદ ફૉર્મેટ", result_copy:"⧉ કૉપિ", result_copied:"✓ કૉપિ થઈ!", result_edit:"✏️ સંપાદિત કરો", result_done:"✓ થઈ ગયું", result_reset:"↺ રીસેટ", result_whatsapp:"💬 વ્હૉટ્સએપ", result_trans:"🌐 મૂળ ભાષા અનુવાદ", result_trans_show:"અનુવાદ બતાવો ▼", result_trans_hide:"છુપાવો ▲", result_schemes:"📜 સરકારી યોજના", result_alt:"📌 વૈકલ્પિક વિષય લાઇન", login_title:"તમારું એકાઉન્ટ બનાવો", login_sub:"ફરિયાદ ઇતિહાસ સાચવો.", login_name:"તમારું નામ", login_email:"ઇમેઇલ", login_name_ph:"દા.ત. રમેશ કુમાર", login_email_ph:"tame@email.com", login_btn:"લૉગિન / સાઇન અપ", login_skip:"લૉગિન વગર ચાલુ રાખો", err_empty:"નામ અને સ્થળ ભરો. વર્ણન લખો અથવા ફોટો ઉમેરો.", footer:"ભારતીય નાગરિકો માટે બનાવ્યું ·", simplify_title:"પત્ર સરળ & અનુવાદ", simplify_sub:"કોઈ પણ જટિલ પત્ર પેસ્ટ કરો.", simplify_paste:"પત્ર અહીં પેસ્ટ કરો", simplify_paste_ph:"કોઈ પણ સરકારી પત્ર, કાનૂની નોટિસ, બેંક પત્ર પેસ્ટ કરો…", simplify_target:"આ ભાષામાં અનુવાદ કરો", simplify_btn:"🔄 સરળ & અનુવાદ", simplify_summary:"📋 સરળ સારાંશ", simplify_simple:"📝 સરળ પત્ર", simplify_native:"🌐 અનુવાદ", simplify_key:"🔑 મુખ્ય મુદ્દા", simplify_action:"⚡ શું કરવું", simplify_deadline:"⏰ છેલ્લી તારીખ", simplify_sender:"🏛 મોકલનાર", simplify_empty:"કૃપા કરીને સરળ કરવા પત્ર પેસ્ટ કરો." },
+  pa: { name:"ਪੰਜਾਬੀ", label:"ਪੰਜਾਬੀ", nav_login:"ਲੌਗਇਨ", nav_try:"ਮੁਫ਼ਤ →", nav_home:"ਹੋਮ", nav_dashboard:"ਡੈਸ਼ਬੋਰਡ", hero_tag:"ਹਰ ਭਾਰਤੀ ਨਾਗਰਿਕ ਲਈ", hero_h1_1:"ਤੁਹਾਡੀ ਨਾਗਰਿਕ ਆਵਾਜ਼,", hero_h1_2:"AI ਦੁਆਰਾ ਮਜ਼ਬੂਤ", hero_sub:"ਬੋਲੋ, ਟਾਈਪ ਕਰੋ ਜਾਂ ਫੋਟੋ ਅਪਲੋਡ ਕਰੋ — ਤੁਰੰਤ ਸ਼ਿਕਾਇਤ ਪੱਤਰ ਪਾਓ।", btn_generate:"ਸ਼ਿਕਾਇਤ ਬਣਾਓ →", btn_login:"ਪੂਰੀ ਪਹੁੰਚ ਲਈ ਲੌਗਇਨ", stat1:"14+ ਭਾਸ਼ਾਵਾਂ", stat2:"50K+ ਸ਼ਿਕਾਇਤਾਂ", stat3:"ਭਰੋਸੇਯੋਗ & ਪ੍ਰਮਾਣਿਤ", stat4:"ਹਮੇਸ਼ਾ ਮੁਫ਼ਤ", templates_title:"ਤਿਆਰ ਟੈਂਪਲੇਟ", templates_sub:"ਆਮ ਸਮੱਸਿਆ ਚੁਣੋ", features_title:"ਸਭ ਕੁਝ ਜੋ ਚਾਹੀਦਾ", features_sub:"ਹਰ ਭਾਰਤੀ ਲਈ, ਹਰ ਭਾਸ਼ਾ ਵਿੱਚ", how_title:"ਕਿਵੇਂ ਕੰਮ ਕਰਦਾ ਹੈ", how_sub:"30 ਸਕਿੰਟਾਂ ਵਿੱਚ ਸ਼ਿਕਾਇਤ ਤਿਆਰ", reviews_title:"ਲੋਕ ਕੀ ਕਹਿੰਦੇ ਹਨ", reviews_sub:"ਭਾਰਤ ਭਰ ਦੇ ਨਾਗਰਿਕਾਂ ਦੀ ਰਾਏ", cta_title:"ਸ਼ਿਕਾਇਤ ਦਰਜ ਕਰਨ ਲਈ ਤਿਆਰ?", cta_sub:"ਮੁਫ਼ਤ · ਤੇਜ਼ · ਸਾਰੀਆਂ ਭਾਰਤੀ ਭਾਸ਼ਾਵਾਂ", cta_btn:"ਹੁਣੇ ਸ਼ੁਰੂ ਕਰੋ →", form_title:"ਆਪਣੀ ਸ਼ਿਕਾਇਤ ਦੱਸੋ", form_sub:"ਵੇਰਵੇ ਭਰੋ — ਕਿਸੇ ਵੀ ਭਾਸ਼ਾ ਵਿੱਚ ਲਿਖੋ।", form_name:"ਤੁਹਾਡਾ ਨਾਮ", form_loc:"ਥਾਂ", form_desc:"ਸਮੱਸਿਆ ਦਾ ਵੇਰਵਾ", form_support:"ਵਾਧੂ ਵੇਰਵੇ", form_name_ph:"ਆਪਣਾ ਪੂਰਾ ਨਾਮ ਲਿਖੋ", form_loc_ph:"ਆਪਣਾ ਇਲਾਕਾ, ਸ਼ਹਿਰ ਜਾਂ ਪਤਾ", form_desc_ph:"ਸਮੱਸਿਆ ਵਿਸਥਾਰ ਵਿੱਚ ਦੱਸੋ (ਫੋਟੋ ਹੋਵੇ ਤਾਂ ਜ਼ਰੂਰੀ ਨਹੀਂ)…", form_support_ph:"ਕੋਈ ਵਾਧੂ ਜਾਣਕਾਰੀ (ਵਿਕਲਪਿਕ)…", form_required:"ਜ਼ਰੂਰੀ ਜਾਣਕਾਰੀ", form_optional:"ਵਿਕਲਪਿਕ", btn_submit:"🔥 ਸ਼ਿਕਾਇਤ ਪੱਤਰ ਬਣਾਓ", btn_speak:"🎙️ ਬੋਲੋ", btn_listening:"🔴 ਸੁਣ ਰਿਹਾ ਹੈ…", btn_photo:"📸 ਫੋਟੋ ਅਪਲੋਡ ਕਰੋ", close:"✕ ਬੰਦ ਕਰੋ", back:"← ਵਾਪਸ", dash_welcome:"ਜੀ ਆਇਆਂ,", dash_welcome_back:"ਮੁੜ ਜੀ ਆਇਆਂ,", dash_filed:"ਸ਼ਿਕਾਇਤਾਂ ਦਰਜ", tab_write:"✍️ ਲਿਖੋ", tab_templates:"📋 ਟੈਂਪਲੇਟ", tab_history:"📁 ਇਤਿਹਾਸ", tab_simplify:"🔄 ਪੱਤਰ ਸਰਲ ਕਰੋ", tpl_tap:"ਚੁਣੋ", tpl_selected:"✓ ਚੁਣਿਆ ਗਿਆ", tpl_clear:"✕ ਹਟਾਓ", tpl_edit:"✍️ ਸੰਪਾਦਿਤ ਕਰੋ →", hist_title:"ਸ਼ਿਕਾਇਤ ਇਤਿਹਾਸ", result_severity:"ਗੰਭੀਰਤਾ", result_authority:"ਨਜ਼ਦੀਕੀ ਅਧਿਕਾਰੀ", result_submission:"ਜਮ੍ਹਾਂ ਕਰਨ ਦਾ ਤਰੀਕਾ", result_type:"ਸਮੱਸਿਆ ਦੀ ਕਿਸਮ", result_lang:"ਭਾਸ਼ਾ", result_formats:"ਸ਼ਿਕਾਇਤ ਫੌਰਮੈਟ", result_copy:"⧉ ਕਾਪੀ", result_copied:"✓ ਕਾਪੀ ਹੋਈ!", result_edit:"✏️ ਸੰਪਾਦਿਤ ਕਰੋ", result_done:"✓ ਹੋ ਗਿਆ", result_reset:"↺ ਰੀਸੈੱਟ", result_whatsapp:"💬 ਵਟਸਐਪ", result_trans:"🌐 ਮਾਤ ਭਾਸ਼ਾ ਅਨੁਵਾਦ", result_trans_show:"ਅਨੁਵਾਦ ਦਿਖਾਓ ▼", result_trans_hide:"ਲੁਕਾਓ ▲", result_schemes:"📜 ਸਰਕਾਰੀ ਯੋਜਨਾਵਾਂ", result_alt:"📌 ਵਿਕਲਪਿਕ ਵਿਸ਼ਾ ਲਾਈਨਾਂ", login_title:"ਆਪਣਾ ਖਾਤਾ ਬਣਾਓ", login_sub:"ਸ਼ਿਕਾਇਤ ਇਤਿਹਾਸ ਸੁਰੱਖਿਅਤ ਕਰੋ।", login_name:"ਤੁਹਾਡਾ ਨਾਮ", login_email:"ਈਮੇਲ", login_name_ph:"ਜਿਵੇਂ ਰਮੇਸ਼ ਕੁਮਾਰ", login_email_ph:"tussi@email.com", login_btn:"ਲੌਗਇਨ / ਸਾਈਨ ਅੱਪ", login_skip:"ਲੌਗਇਨ ਤੋਂ ਬਿਨਾਂ ਜਾਰੀ ਰੱਖੋ", err_empty:"ਨਾਮ ਅਤੇ ਥਾਂ ਭਰੋ। ਵੇਰਵਾ ਲਿਖੋ ਜਾਂ ਫੋਟੋ ਜੋੜੋ।", footer:"ਭਾਰਤੀ ਨਾਗਰਿਕਾਂ ਲਈ ਬਣਾਇਆ ·", simplify_title:"ਪੱਤਰ ਸਰਲੀਕਰਨ & ਅਨੁਵਾਦ", simplify_sub:"ਕੋਈ ਵੀ ਗੁੰਝਲਦਾਰ ਪੱਤਰ ਪੇਸਟ ਕਰੋ।", simplify_paste:"ਪੱਤਰ ਇੱਥੇ ਪੇਸਟ ਕਰੋ", simplify_paste_ph:"ਕੋਈ ਵੀ ਸਰਕਾਰੀ ਪੱਤਰ, ਕਾਨੂੰਨੀ ਨੋਟਿਸ ਪੇਸਟ ਕਰੋ…", simplify_target:"ਇਸ ਭਾਸ਼ਾ ਵਿੱਚ ਅਨੁਵਾਦ", simplify_btn:"🔄 ਸਰਲ & ਅਨੁਵਾਦ", simplify_summary:"📋 ਸਰਲ ਸਾਰ", simplify_simple:"📝 ਸਰਲ ਪੱਤਰ", simplify_native:"🌐 ਅਨੁਵਾਦ", simplify_key:"🔑 ਮੁੱਖ ਨੁਕਤੇ", simplify_action:"⚡ ਕੀ ਕਰਨਾ ਹੈ", simplify_deadline:"⏰ ਆਖਰੀ ਮਿਤੀ", simplify_sender:"🏛 ਭੇਜਣ ਵਾਲਾ", simplify_empty:"ਕਿਰਪਾ ਕਰਕੇ ਸਰਲ ਕਰਨ ਲਈ ਪੱਤਰ ਪੇਸਟ ਕਰੋ।" },
+};
+const LANG_KEYS = Object.keys(LANGS);
+
+const TRANSLATE_LANGS = [
+  { code:"hi", label:"हिन्दी (Hindi)" },
+  { code:"mr", label:"मराठी (Marathi)" },
+  { code:"ta", label:"தமிழ் (Tamil)" },
+  { code:"te", label:"తెలుగు (Telugu)" },
+  { code:"kn", label:"ಕನ್ನಡ (Kannada)" },
+  { code:"bn", label:"বাংলা (Bengali)" },
+  { code:"gu", label:"ગુજરાતી (Gujarati)" },
+  { code:"pa", label:"ਪੰਜਾਬੀ (Punjabi)" },
+  { code:"ml", label:"മലയാളം (Malayalam)" },
+  { code:"or", label:"ଓଡ଼ିଆ (Odia)" },
+  { code:"ur", label:"اردو (Urdu)" },
+  { code:"en", label:"English" },
+];
+
+const TEMPLATES = [
+  { id:"water",icon:"💧",label:"Water Supply",color:"#1a6fa8",bg:"#eaf4fd",text:"The water supply in our area has been completely disrupted for the past 2 weeks. Residents are facing severe hardship due to lack of drinking water. Despite multiple complaints to the ward office, no action has been taken." },
+  { id:"road",icon:"🚧",label:"Road / Pothole",color:"#a06820",bg:"#fef5e4",text:"There is a large dangerous pothole on the main road near our locality present for over 2 months. Two residents have already suffered injuries. The road is used by hundreds daily including school children." },
+  { id:"electricity",icon:"⚡",label:"Electricity",color:"#7a4a1a",bg:"#fef0e0",text:"Our area has been experiencing frequent power cuts and voltage fluctuations for the past 3 weeks. Outages last 6–8 hours daily causing damage to appliances and severely affecting daily life." },
+  { id:"garbage",icon:"🗑️",label:"Garbage / Waste",color:"#4a6010",bg:"#f2f5e0",text:"Garbage has not been collected from our street for the past 10 days. The waste is causing foul odour and a serious health hazard. Stray animals are scattering garbage making the situation worse." },
+  { id:"streetlight",icon:"💡",label:"Street Light",color:"#5a409a",bg:"#f0edf8",text:"The street lights in our area have been non-functional for 3 weeks. The darkness is extremely dangerous especially for women and senior citizens." },
+  { id:"drainage",icon:"🌊",label:"Drainage / Sewage",color:"#1a6060",bg:"#e0f5f5",text:"The drainage system in our locality is completely blocked and sewage water is overflowing onto the road for over a week creating unhygienic conditions." },
+  { id:"noise",icon:"🔊",label:"Noise Pollution",color:"#8a3030",bg:"#fce8e8",text:"A nearby commercial establishment has been operating with extremely loud noise beyond permissible hours (after 10 PM) for the past month." },
+  { id:"encroachment",icon:"🏗️",label:"Encroachment",color:"#404090",bg:"#eeeef8",text:"An illegal construction and encroachment has been taking place on public land near our society for 2 weeks blocking road access without proper permits." },
+];
+
+const SEV = {
+  Low:      { c:"#2a7a50", bg:"#e8f5ee", bar:25,  emoji:"🟢" },
+  Moderate: { c:"#a07020", bg:"#fef5e4", bar:55,  emoji:"🟡" },
+  High:     { c:"#b05010", bg:"#fdeee5", bar:78,  emoji:"🟠" },
+  Dangerous:{ c:"#b03020", bg:"#fdf2f2", bar:97,  emoji:"🔴" },
+};
+const FMTS = [
+  { id:"formal",   icon:"📄", label:"Formal" },
+  { id:"gmail",    icon:"📧", label:"Email" },
+  { id:"whatsapp", icon:"💬", label:"WhatsApp" },
+  { id:"sms",      icon:"📱", label:"SMS" },
+];
+const REVIEWS = [
+  { name:"Priya Sharma", city:"Mumbai, Maharashtra", stars:5, text:"Filed a water complaint in Hindi — got a perfect formal letter in seconds. Municipality responded in 3 days!", avatar:"P" },
+  { name:"Rajan Nair", city:"Kozhikode, Kerala", stars:5, text:"Tried it in Malayalam, understood perfectly and generated all 4 formats. WhatsApp version was especially helpful.", avatar:"R" },
+  { name:"Sunita Devi", city:"Patna, Bihar", stars:5, text:"Mujhe English mein likhna nahi aata tha. Isne meri baat Hindi mein sunke sahi letter bana diya!", avatar:"S" },
+  { name:"Arjun Reddy", city:"Hyderabad, Telangana", stars:5, text:"The severity analyzer correctly flagged drainage as 'High' and suggested AMRUT scheme. Very impressive!", avatar:"A" },
+  { name:"Meena Krishnan", city:"Chennai, Tamil Nadu", stars:4, text:"தமிழில் எழுதினேன், ஆங்கிலத்தில் அழகான கடிதம் வந்தது. மிகவும் பயனுள்ளது!", avatar:"M" },
+  { name:"Deepak Joshi", city:"Pune, Maharashtra", stars:5, text:"Used the simplifier for a bank notice I couldn't understand. Explained everything clearly in Marathi!", avatar:"D" },
+];
+const HISTORY_SEED = [
+  { id:1, date:"02 Mar 2025", type:"Water Supply", sev:"High",    snippet:"No water supply for 2 weeks in Sector 14..." },
+  { id:2, date:"28 Feb 2025", type:"Road Damage",  sev:"Moderate",snippet:"Large pothole on MG Road causing accidents..." },
+];
+
+const G = "#1a5c3a";
+
+const COMPLAINT_SYS = `You are an AI Civic Complaint Assistant for Indian citizens.
+Output ONLY valid JSON, no markdown:
+{
+  "detected_language":"name of language user wrote in",
+  "severity":"Low|Moderate|High|Dangerous",
+  "severity_reason":"one sentence",
+  "issue_type":"short label",
+  "nearest_authority":"dept name",
+  "schemes":[{"name":"","description":"","link":""}],
+  "formats":{
+    "formal":"Subject: ...\\n\\nRespected Sir/Madam,\\n\\n[para1]\\n\\n[para2]\\n\\n[para3]\\n\\nThanking you,\\nYours sincerely, [Name]",
+    "gmail":"Subject: ...\\n\\nDear Sir/Madam,\\n\\n[~100 word email]\\n\\nRegards, [Name]",
+    "whatsapp":"🙏 [60-word casual message with emoji]",
+    "sms":"[under 160 chars, no emoji]"
+  },
+  "native_translation":"Full formal letter translated into the EXACT language the user wrote in (complete, not truncated)",
+  "alt_subject_1":"",
+  "alt_subject_2":"",
+  "submission_mode":"Email / Online Portal / In-Person"
+}`;
+
+const buildSimplifySys = (targetLangLabel) => `You are an expert at making complex government and legal letters easy to understand for common Indian citizens.
+Output ONLY valid JSON, no markdown:
+{
+  "sender":"who sent this letter (org/dept name)",
+  "summary":"2-3 plain, friendly sentence summary of what this letter is about (no jargon)",
+  "key_points":["point 1","point 2","point 3","point 4"],
+  "action_required":"exactly what the recipient must do (or 'No action required')",
+  "deadline":"any deadline or date mentioned (or 'Not specified')",
+  "simplified_letter":"Full rewritten version of the letter in very simple, friendly language (5th-grade reading level). Keep all important details. Use short sentences.",
+  "translation":"Full translation of the simplified letter into ${targetLangLabel}. Must be complete and accurate."
+}`;
+
+function Card({ children, style={} }) {
+  return <div style={{ background:"#fff", border:"1px solid #eae8e2", borderRadius:14, overflow:"hidden", ...style }}>{children}</div>;
+}
+function CardHead({ label, right }) {
+  return <div style={{ background:"#f8f7f3", borderBottom:"1px solid #eae8e2", padding:"0.75rem 1.4rem", fontSize:"0.68rem", fontWeight:800, color:"#888", textTransform:"uppercase", letterSpacing:"0.1em", display:"flex", alignItems:"center", justifyContent:"space-between" }}><span>{label}</span>{right}</div>;
+}
+function Btn({ children, v="fill", onClick, disabled, style={}, href, full }) {
+  const base = { display:"inline-flex", alignItems:"center", justifyContent:"center", gap:"0.35rem", fontFamily:"inherit", fontWeight:700, fontSize:"0.82rem", cursor:disabled?"not-allowed":"pointer", borderRadius:8, border:"none", transition:"opacity .15s", width:full?"100%":undefined, ...style };
+  const vs = {
+    fill:   { ...base, background:disabled?"#b0ccbe":G, color:"#fff", padding:"0.55rem 1.15rem" },
+    outline:{ ...base, background:"transparent", color:G, border:`1.5px solid ${G}`, padding:"0.5rem 1.1rem" },
+    ghost:  { ...base, background:"#f5f4f0", color:"#333", border:"1px solid #eae8e2", padding:"0.5rem 1.1rem" },
+    white:  { ...base, background:"#fff", color:G, padding:"0.55rem 1.15rem" },
+    ghostW: { ...base, background:"rgba(255,255,255,.12)", color:"#fff", border:"1.5px solid rgba(255,255,255,.25)", padding:"0.5rem 1.1rem" },
+    purple: { ...base, background:"#5a2d8a", color:"#fff", padding:"0.55rem 1.15rem" },
+  };
+  const s = vs[v] || vs.fill;
+  if (href) return <a href={href} target="_blank" rel="noreferrer" style={{ ...s, textDecoration:"none" }}>{children}</a>;
+  return <button style={s} onClick={onClick} disabled={disabled}>{children}</button>;
+}
+function Label({ children }) {
+  return <div style={{ fontSize:"0.67rem", fontWeight:800, color:"#555", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:"0.45rem" }}>{children}</div>;
+}
+function Input({ value, onChange, placeholder, style={} }) {
+  return <input value={value} onChange={onChange} placeholder={placeholder} style={{ width:"100%", padding:"0.72rem 0.9rem", fontFamily:"inherit", fontSize:"0.9rem", background:"#f0f7f3", border:"1.5px solid #d4e8dc", borderRadius:9, outline:"none", boxSizing:"border-box", color:"#111", ...style }} />;
+}
+function Textarea({ value, onChange, placeholder, rows=4, style={} }) {
+  return <textarea value={value} onChange={onChange} placeholder={placeholder} rows={rows} style={{ width:"100%", padding:"0.72rem 0.9rem", fontFamily:"inherit", fontSize:"0.9rem", background:"#f0f7f3", border:"1.5px solid #d4e8dc", borderRadius:9, outline:"none", boxSizing:"border-box", color:"#111", resize:"vertical", lineHeight:1.7, ...style }} />;
+}
+function Spinner() {
+  return <span style={{ width:15,height:15,border:"2px solid rgba(255,255,255,0.4)",borderTopColor:"#fff",borderRadius:"50%",display:"inline-block",animation:"spin .7s linear infinite" }} />;
+}
+function Badge({ children, color="#2a7a50", bg="#e8f5ee" }) {
+  return <span style={{ display:"inline-block", background:bg, color, borderRadius:20, fontSize:"0.65rem", fontWeight:800, padding:"0.15rem 0.6rem" }}>{children}</span>;
+}
+
+export default function App() {
+  const [page, setPage]   = useState("home");
+  const [lang, setLang]   = useState("en");
+  const [showLangMenu, setShowLangMenu] = useState(false);
+  const [user, setUser]   = useState(null);
+  const [lf, setLf]       = useState({ name:"", email:"" });
+
+  const [fname, setFname]     = useState("");
+  const [floc, setFloc]       = useState("");
+  const [fdesc, setFdesc]     = useState("");
+  const [fsupport, setFsupport] = useState("");
+  const [img, setImg]         = useState(null);
+  const [imgPrev, setImgPrev] = useState(null);
+  const [micStatus, setMicStatus] = useState("idle");
+  const [activeMicField, setActiveMicField] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr]         = useState("");
+  const [result, setResult]   = useState(null);
+  const [fmt, setFmt]         = useState("formal");
+  const [editedLetter, setEditedLetter] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [copied, setCopied]   = useState(false);
+  const [history, setHistory] = useState(HISTORY_SEED);
+  const [showTrans, setShowTrans] = useState(false);
+  const [tpl, setTpl]         = useState(null);
+  const [tab, setTab]         = useState("write");
+  const [showUserMenu, setShowUserMenu] = useState(false);
+
+  const [simplifyText, setSimplifyText]   = useState("");
+  const [simplifyLang, setSimplifyLang]   = useState("hi");
+  const [simplifyLoading, setSimplifyLoading] = useState(false);
+  const [simplifyErr, setSimplifyErr]     = useState("");
+  const [simplifyResult, setSimplifyResult] = useState(null);
+  const [simplifyTab, setSimplifyTab]     = useState("summary");
+  const [simplCopied, setSimplCopied]     = useState("");
+  const [wordCount, setWordCount]         = useState(0);
+
+  const T = LANGS[lang] || LANGS.en;
+  const fileRef = useRef();
+  const srRef   = useRef(null);
+
+  useEffect(() => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { setMicStatus("unsupported"); return; }
+    const r = new SR();
+    r.continuous = false; r.interimResults = false;
+    r.onresult = e => {
+      const t = e.results[0][0].transcript;
+      if (activeMicField === "desc") setFdesc(p => p ? p+" "+t : t);
+      else if (activeMicField === "support") setFsupport(p => p ? p+" "+t : t);
+      setMicStatus("idle"); setActiveMicField(null);
+    };
+    r.onerror = () => { setMicStatus("idle"); setActiveMicField(null); };
+    r.onend = () => { setMicStatus("idle"); setActiveMicField(null); };
+    srRef.current = r;
+  }, [activeMicField]);
+
+  const startMic = field => {
+    if (micStatus==="unsupported") { setErr("Speech recognition only works in Chrome/Edge."); return; }
+    if (micStatus==="listening") { srRef.current.stop(); return; }
+    setErr("");
+    navigator.mediaDevices?.getUserMedia({ audio:true })
+      .then(() => { setActiveMicField(field); srRef.current.start(); setMicStatus("listening"); })
+      .catch(() => setErr("Microphone access denied."));
+  };
+
+  const pickImg = e => {
+    const f = e.target.files[0]; if (!f) return;
+    setImg(f);
+    const r = new FileReader(); r.onload = ev => setImgPrev(ev.target.result); r.readAsDataURL(f);
+  };
+
+  const login = () => {
+    if (!lf.name || !lf.email) return;
+    setUser({ name:lf.name, email:lf.email, av:lf.name[0].toUpperCase(), isNew:true });
+    setPage("dashboard");
+  };
+  const logout = () => { setUser(null); setHistory(HISTORY_SEED); setShowUserMenu(false); setResult(null); setPage("home"); };
+  const applyTpl = t => { setTpl(t.id); setFdesc(t.text); setTab("write"); };
+
+  const fallbackCopy = text => {
+    const ta = document.createElement("textarea");
+    ta.value = text; ta.style.position="fixed"; ta.style.opacity="0";
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    try { document.execCommand("copy"); } catch {}
+    document.body.removeChild(ta);
+  };
+
+  const copyText = (text, key, setter) => {
+    const doCopy = () => { setter(key); setTimeout(()=>setter(""), 2000); };
+    if (navigator.clipboard?.writeText) navigator.clipboard.writeText(text).then(doCopy).catch(()=>{ fallbackCopy(text); doCopy(); });
+    else { fallbackCopy(text); doCopy(); }
+  };
+
+  // ── UPDATED: photo can replace description ───────────────────────────────
+  const go = async () => {
+    // Name & location always required. Description required only if no photo uploaded.
+    if (!fname.trim() || !floc.trim() || (!fdesc.trim() && !img)) {
+      setErr(T.err_empty); return;
+    }
+    setErr(""); setResult(null); setIsEditing(false); setLoading(true);
+
+    const descPart = fdesc.trim()
+      ? `Problem: ${fdesc}`
+      : "Problem: [See attached photo — please analyze the image and identify the civic issue depicted]";
+    const fullText = `Name: ${fname}\nLocation: ${floc}\n${descPart}${fsupport ? "\nAdditional: "+fsupport : ""}`;
+
+    try {
+      let messages;
+      if (img) {
+        const b64 = await new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result.split(",")[1]); r.onerror=rej; r.readAsDataURL(img); });
+        messages = [{ role:"user", content:[
+          { type:"image", source:{ type:"base64", media_type:img.type, data:b64 }},
+          { type:"text", text: fdesc.trim()
+            ? fullText
+            : `${fullText}\n\nIMPORTANT: No description was provided by the user. Please carefully look at the image, identify the civic problem shown (e.g. pothole, garbage, broken streetlight, waterlogging, encroachment, etc.), and generate a complete formal complaint based on what you see in the image.`
+          }
+        ]}];
+      } else {
+        messages = [{ role:"user", content:fullText }];
+      }
+
+      const res  = await fetch("https://api.anthropic.com/v1/messages",{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:2000, system:COMPLAINT_SYS, messages })});
+      const data = await res.json();
+      const raw  = (data.content||[]).map(i=>i.text||"").join("").replace(/```json|```/g,"").trim();
+      const p    = JSON.parse(raw);
+      setResult(p); setEditedLetter(p.formats?.formal||"");
+      if (user) {
+        setHistory(h=>[{ id:Date.now(), date:new Date().toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"}), type:p.issue_type||"Complaint", sev:p.severity||"Moderate", snippet:(fdesc||"Photo-based complaint").slice(0,65)+"..." },...h]);
+        setUser(u=>({ ...u, isNew:false }));
+      }
+      setPage("result");
+      setTimeout(()=>window.scrollTo({ top:0, behavior:"smooth" }), 50);
+    } catch(e) { setErr("Something went wrong. Please try again."); }
+    setLoading(false);
+  };
+
+  const doSimplify = async () => {
+    if (!simplifyText.trim()) { setSimplifyErr(T.simplify_empty); return; }
+    setSimplifyErr(""); setSimplifyResult(null); setSimplifyLoading(true);
+    const targetLang = TRANSLATE_LANGS.find(l=>l.code===simplifyLang)?.label || "Hindi";
+    try {
+      const res  = await fetch("https://api.anthropic.com/v1/messages",{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:2500, system:buildSimplifySys(targetLang), messages:[{ role:"user", content:`Please simplify and translate this letter:\n\n${simplifyText}` }]})});
+      const data = await res.json();
+      const raw  = (data.content||[]).map(i=>i.text||"").join("").replace(/```json|```/g,"").trim();
+      const p    = JSON.parse(raw);
+      setSimplifyResult(p); setSimplifyTab("summary");
+    } catch(e) { setSimplifyErr("Something went wrong. Please try again."); }
+    setSimplifyLoading(false);
+  };
+
+  const sev = result ? (SEV[result.severity] || SEV.Moderate) : SEV.Moderate;
+
+  const LangSelector = (
+    <div style={{ position:"relative" }} onClick={e=>e.stopPropagation()}>
+      <button onClick={()=>setShowLangMenu(m=>!m)}
+        style={{ display:"flex", alignItems:"center", gap:"0.35rem", padding:"0.42rem 0.85rem", borderRadius:8, border:"1.5px solid #eae8e2", background:"#f8f7f3", cursor:"pointer", fontFamily:"inherit", fontSize:"0.8rem", fontWeight:700, color:"#333" }}>
+        🌐 {T.label} <span style={{ fontSize:"0.6rem" }}>{showLangMenu?"▲":"▼"}</span>
+      </button>
+      {showLangMenu && (
+        <div style={{ position:"absolute", top:"110%", right:0, background:"#fff", border:"1px solid #eae8e2", borderRadius:10, boxShadow:"0 8px 24px rgba(0,0,0,0.12)", zIndex:999, minWidth:165, overflow:"hidden", maxHeight:360, overflowY:"auto" }}>
+          {LANG_KEYS.map(k=>(
+            <button key={k} onClick={()=>{ setLang(k); setShowLangMenu(false); }}
+              style={{ display:"flex", alignItems:"center", gap:"0.5rem", width:"100%", textAlign:"left", padding:"0.65rem 1rem", border:"none", background:lang===k?"#e8f5ee":"transparent", color:lang===k?G:"#333", fontSize:"0.83rem", fontWeight:lang===k?800:500, cursor:"pointer", fontFamily:"inherit" }}>
+              {lang===k && <span style={{ color:G, fontSize:"0.7rem" }}>✓</span>}
+              {LANGS[k].name}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  const Nav = (
+    <nav style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0.82rem 2rem", background:"#fff", borderBottom:"1px solid #eae8e2", position:"sticky", top:0, zIndex:200, boxShadow:"0 1px 8px rgba(0,0,0,0.05)" }}>
+      <div onClick={()=>setPage("home")} style={{ cursor:"pointer", display:"flex", alignItems:"baseline", userSelect:"none" }}>
+        <span style={{ fontSize:"1.55rem", fontWeight:900, color:"#111", letterSpacing:"-1px", lineHeight:1 }}>Lingua</span>
+        <span style={{ fontSize:"1.55rem", fontWeight:900, color:G, letterSpacing:"-1px", lineHeight:1 }}>Bridge</span>
+        <span style={{ marginLeft:6, fontSize:"0.56rem", fontWeight:800, background:"#e8f5ee", color:G, padding:"0.15rem 0.5rem", borderRadius:20, letterSpacing:"0.08em", textTransform:"uppercase", verticalAlign:"middle" }}>AI</span>
+      </div>
+      <div style={{ display:"flex", gap:"0.55rem", alignItems:"center" }}>
+        {LangSelector}
+        {page!=="home" && <Btn v="ghost" onClick={()=>setPage("home")}>{T.nav_home}</Btn>}
+        {user ? (
+          <>
+            <Btn v="ghost" onClick={()=>setPage("dashboard")}>{T.nav_dashboard}</Btn>
+            <div style={{ position:"relative" }} onClick={e=>e.stopPropagation()}>
+              <div onClick={()=>setShowUserMenu(m=>!m)} style={{ width:34, height:34, borderRadius:"50%", background:G, color:"#fff", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:900, fontSize:"0.88rem", cursor:"pointer" }}>
+                {user.av}
+              </div>
+              {showUserMenu && (
+                <div style={{ position:"absolute", top:"110%", right:0, background:"#fff", border:"1px solid #eae8e2", borderRadius:10, boxShadow:"0 8px 24px rgba(0,0,0,0.12)", zIndex:999, minWidth:170, overflow:"hidden" }}>
+                  <div style={{ padding:"0.85rem 1rem", borderBottom:"1px solid #f0eeea" }}>
+                    <div style={{ fontWeight:800, fontSize:"0.85rem" }}>{user.name}</div>
+                    <div style={{ fontSize:"0.72rem", color:"#aaa" }}>{user.email}</div>
+                  </div>
+                  <button onClick={()=>{ setPage("dashboard"); setShowUserMenu(false); }} style={{ display:"flex", alignItems:"center", gap:"0.5rem", width:"100%", padding:"0.65rem 1rem", border:"none", background:"transparent", color:"#333", fontSize:"0.82rem", fontWeight:600, cursor:"pointer", fontFamily:"inherit" }}>📋 Dashboard</button>
+                  <button onClick={logout} style={{ display:"flex", alignItems:"center", gap:"0.5rem", width:"100%", padding:"0.65rem 1rem", border:"none", background:"transparent", color:"#b03020", fontSize:"0.82rem", fontWeight:700, cursor:"pointer", fontFamily:"inherit", borderTop:"1px solid #f0eeea" }}>🚪 Logout</button>
+                </div>
+              )}
+            </div>
+          </>
+        ) : (
+          <>
+            <Btn v="outline" onClick={()=>setPage("login")}>{T.nav_login}</Btn>
+            <Btn v="fill"    onClick={()=>setPage("dashboard")}>{T.nav_try}</Btn>
+          </>
+        )}
+      </div>
+    </nav>
+  );
+
+  const Home = (
+    <div style={{ background:"#f8f7f3" }}>
+      <div style={{ background:"linear-gradient(150deg,#0c2e1d 0%,#1a5c3a 65%,#27825a 100%)", padding:"5rem 1.5rem 4.5rem", textAlign:"center", position:"relative", overflow:"hidden" }}>
+        {[280,420,580].map((s,i)=>(
+          <div key={i} style={{ position:"absolute", top:"50%", left:"50%", transform:"translate(-50%,-50%)", width:s, height:s, border:"1px solid rgba(255,255,255,0.05)", borderRadius:"50%", pointerEvents:"none" }} />
+        ))}
+        <div style={{ position:"relative", zIndex:1 }}>
+          <div style={{ display:"inline-block", fontSize:"0.67rem", fontWeight:800, letterSpacing:"0.14em", textTransform:"uppercase", color:"rgba(255,255,255,0.65)", background:"rgba(255,255,255,0.1)", padding:"0.3rem 1.1rem", borderRadius:20, marginBottom:"1.5rem", border:"1px solid rgba(255,255,255,0.15)" }}>
+            🇮🇳 {T.hero_tag}
+          </div>
+          <h1 style={{ fontSize:"clamp(2.6rem,6vw,4.6rem)", fontWeight:900, color:"#fff", lineHeight:1.08, letterSpacing:"-2px", marginBottom:"1.1rem" }}>
+            {T.hero_h1_1}<br/><span style={{ color:"#7deba8" }}>{T.hero_h1_2}</span>
+          </h1>
+          <p style={{ color:"rgba(255,255,255,0.65)", fontSize:"1.02rem", maxWidth:440, margin:"0 auto 2.4rem", lineHeight:1.75 }}>{T.hero_sub}</p>
+          <div style={{ display:"flex", gap:"0.8rem", justifyContent:"center", flexWrap:"wrap" }}>
+            <Btn v="white" onClick={()=>{ setPage("dashboard"); setTab("write"); }} style={{ fontSize:"0.95rem", padding:"0.78rem 2rem", borderRadius:10 }}>{T.btn_generate}</Btn>
+            <Btn v="ghostW" onClick={()=>{ setPage("dashboard"); setTab("simplify"); }} style={{ fontSize:"0.95rem", padding:"0.78rem 2rem", borderRadius:10 }}>🔄 Simplify a Letter</Btn>
+          </div>
+          <div style={{ display:"flex", flexWrap:"wrap", justifyContent:"center", gap:"0.4rem", marginTop:"1.8rem" }}>
+            {["हिन्दी","मराठी","தமிழ்","తెలుగు","ಕನ್ನಡ","বাংলা","English","ਪੰਜਾਬੀ","اردو","ગુજરાતી","മലയാളം","ଓଡ଼ིଆ","অসমীয়া","संस्कृत"].map(l=>(
+              <span key={l} style={{ fontSize:"0.7rem", background:"rgba(255,255,255,0.1)", color:"rgba(255,255,255,0.8)", borderRadius:20, padding:"0.2rem 0.7rem", border:"1px solid rgba(255,255,255,0.15)" }}>{l}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ background:"#fff", borderBottom:"1px solid #eae8e2" }}>
+        <div style={{ maxWidth:860, margin:"0 auto", display:"grid", gridTemplateColumns:"repeat(4,1fr)", padding:"0 1.2rem" }}>
+          {[[T.stat1,"🌐"],[T.stat2,"📝"],[T.stat3,"✅"],[T.stat4,"🆓"]].map(([label,icon])=>(
+            <div key={label} style={{ textAlign:"center", padding:"1.2rem 0.5rem", borderRight:"1px solid #eae8e2" }}>
+              <div style={{ fontSize:"1.2rem", marginBottom:"0.25rem" }}>{icon}</div>
+              <div style={{ fontSize:"0.88rem", fontWeight:800, color:G }}>{label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ maxWidth:880, margin:"3rem auto 0", padding:"0 1.2rem" }}>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"1rem" }}>
+          <div style={{ background:"linear-gradient(135deg,#0c2e1d,#1a5c3a)", borderRadius:18, padding:"2rem 1.8rem", color:"#fff", position:"relative", overflow:"hidden" }}>
+            <div style={{ position:"absolute", right:-20, bottom:-20, fontSize:"6rem", opacity:0.07, pointerEvents:"none" }}>📋</div>
+            <div style={{ fontSize:"2rem", marginBottom:"0.8rem" }}>📋</div>
+            <div style={{ fontWeight:900, fontSize:"1.2rem", marginBottom:"0.5rem", letterSpacing:"-0.3px" }}>Complaint Generator</div>
+            <div style={{ fontSize:"0.82rem", color:"rgba(255,255,255,0.65)", lineHeight:1.6, marginBottom:"1.2rem" }}>Describe your civic issue → get a formal complaint letter in seconds, ready to send to any authority.</div>
+            <Btn v="white" onClick={()=>{ setPage("dashboard"); setTab("write"); }} style={{ fontSize:"0.82rem" }}>Generate Now →</Btn>
+          </div>
+          <div style={{ background:"linear-gradient(135deg,#3a1470,#5a2d8a)", borderRadius:18, padding:"2rem 1.8rem", color:"#fff", position:"relative", overflow:"hidden" }}>
+            <div style={{ position:"absolute", right:-20, bottom:-20, fontSize:"6rem", opacity:0.07, pointerEvents:"none" }}>🔄</div>
+            <div style={{ fontSize:"2rem", marginBottom:"0.8rem" }}>🔄</div>
+            <div style={{ fontWeight:900, fontSize:"1.2rem", marginBottom:"0.5rem", letterSpacing:"-0.3px" }}>Letter Simplifier</div>
+            <div style={{ fontSize:"0.82rem", color:"rgba(255,255,255,0.65)", lineHeight:1.6, marginBottom:"1.2rem" }}>Paste any complex government / bank / legal letter → get a plain summary, simplified version & translation.</div>
+            <Btn v="ghostW" onClick={()=>{ setPage("dashboard"); setTab("simplify"); }} style={{ fontSize:"0.82rem" }}>Try Simplifier →</Btn>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ maxWidth:880, margin:"3rem auto 0", padding:"0 1.2rem" }}>
+        <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", marginBottom:"1.2rem" }}>
+          <div>
+            <h2 style={{ fontSize:"1.6rem", fontWeight:900, letterSpacing:"-0.5px", marginBottom:"0.2rem" }}>{T.templates_title}</h2>
+            <p style={{ color:"#888", fontSize:"0.88rem" }}>{T.templates_sub}</p>
+          </div>
+          <Btn v="outline" onClick={()=>setPage("dashboard")} style={{ fontSize:"0.78rem" }}>All →</Btn>
+        </div>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:"0.8rem" }}>
+          {TEMPLATES.slice(0,8).map(t=>(
+            <div key={t.id} onClick={()=>{ applyTpl(t); setPage("dashboard"); }}
+              style={{ background:"#fff", border:"1.5px solid #eae8e2", borderRadius:12, padding:"1.1rem", cursor:"pointer", textAlign:"center", transition:"border-color .15s" }}>
+              <div style={{ fontSize:"1.7rem", marginBottom:"0.4rem" }}>{t.icon}</div>
+              <div style={{ fontSize:"0.8rem", fontWeight:800, color:t.color }}>{t.label}</div>
+              <div style={{ fontSize:"0.65rem", color:"#ccc", marginTop:"0.1rem" }}>{T.tpl_tap}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ maxWidth:880, margin:"3rem auto 0", padding:"0 1.2rem" }}>
+        <h2 style={{ fontSize:"1.6rem", fontWeight:900, letterSpacing:"-0.5px", marginBottom:"0.2rem" }}>{T.features_title}</h2>
+        <p style={{ color:"#888", fontSize:"0.88rem", marginBottom:"1.3rem" }}>{T.features_sub}</p>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"0.9rem" }}>
+          {[["🎙️","Voice Input","Speak in any language — AI understands"],["📸","Photo Detection","Upload a photo only — AI auto-detects the issue, no description needed"],["📋","4 Formats","Formal, Email, WhatsApp & SMS"],["🔄","Letter Simplifier","Paste complex letters — get plain-language breakdown"],["🌐","Full Translation","Complaint or simplified letter in your language"],["📊","Severity Score","Low / Moderate / High / Dangerous"],["📜","Govt. Schemes","AI suggests relevant Yojana schemes"],["✏️","Edit & Customize","Fully editable before you send"],["🔐","History","Save & track all your complaints"]].map(([icon,title,sub])=>(
+            <div key={title} style={{ background:"#fff", border:"1px solid #eae8e2", borderRadius:12, padding:"1.1rem" }}>
+              <div style={{ fontSize:"1.5rem", marginBottom:"0.4rem" }}>{icon}</div>
+              <div style={{ fontSize:"0.83rem", fontWeight:800, marginBottom:"0.18rem" }}>{title}</div>
+              <div style={{ fontSize:"0.73rem", color:"#888", lineHeight:1.5 }}>{sub}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ maxWidth:880, margin:"3rem auto 0", padding:"0 1.2rem" }}>
+        <h2 style={{ fontSize:"1.6rem", fontWeight:900, letterSpacing:"-0.5px", marginBottom:"0.2rem" }}>{T.how_title}</h2>
+        <p style={{ color:"#888", fontSize:"0.88rem", marginBottom:"1.3rem" }}>{T.how_sub}</p>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:"0.9rem" }}>
+          {[["01","Describe","Type, speak, or just upload a photo — no description needed if photo is provided."],["02","AI Generates","4 complaint formats, severity, govt. schemes."],["03","Review","Translate, edit, check schemes."],["04","Submit","Copy & send to the right authority."]].map(([n,t,d])=>(
+            <div key={n} style={{ background:"#fff", border:"1px solid #eae8e2", borderRadius:12, padding:"1.1rem" }}>
+              <div style={{ fontSize:"2.2rem", fontWeight:900, color:"#e8f5ee", lineHeight:1, marginBottom:"0.4rem", fontFamily:"Georgia,serif" }}>{n}</div>
+              <div style={{ fontSize:"0.83rem", fontWeight:800, marginBottom:"0.18rem" }}>{t}</div>
+              <div style={{ fontSize:"0.73rem", color:"#888", lineHeight:1.5 }}>{d}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ maxWidth:880, margin:"3rem auto 0", padding:"0 1.2rem" }}>
+        <h2 style={{ fontSize:"1.6rem", fontWeight:900, letterSpacing:"-0.5px", marginBottom:"0.2rem" }}>{T.reviews_title}</h2>
+        <p style={{ color:"#888", fontSize:"0.88rem", marginBottom:"1.3rem" }}>{T.reviews_sub}</p>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"0.9rem" }}>
+          {REVIEWS.map((r,i)=>(
+            <div key={i} style={{ background:"#fff", border:"1px solid #eae8e2", borderRadius:12, padding:"1.2rem" }}>
+              <div style={{ color:"#f59e0b", fontSize:"0.85rem", marginBottom:"0.6rem" }}>{"★".repeat(r.stars)}</div>
+              <p style={{ fontSize:"0.8rem", color:"#444", lineHeight:1.6, marginBottom:"0.9rem" }}>"{r.text}"</p>
+              <div style={{ display:"flex", alignItems:"center", gap:"0.6rem" }}>
+                <div style={{ width:32, height:32, borderRadius:"50%", background:G, color:"#fff", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:800, fontSize:"0.82rem", flexShrink:0 }}>{r.avatar}</div>
+                <div>
+                  <div style={{ fontSize:"0.78rem", fontWeight:800 }}>{r.name}</div>
+                  <div style={{ fontSize:"0.7rem", color:"#aaa" }}>{r.city}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ maxWidth:880, margin:"3rem auto 0", padding:"0 1.2rem" }}>
+        <div style={{ background:"linear-gradient(135deg,#0c2e1d,#1a5c3a)", borderRadius:18, padding:"2.4rem 2rem", textAlign:"center", marginBottom:"3rem" }}>
+          <div style={{ fontSize:"1.6rem", fontWeight:900, color:"#fff", letterSpacing:"-0.5px", marginBottom:"0.4rem" }}>{T.cta_title}</div>
+          <div style={{ color:"rgba(255,255,255,0.6)", fontSize:"0.88rem", marginBottom:"1.4rem" }}>{T.cta_sub}</div>
+          <div style={{ display:"flex", gap:"0.8rem", justifyContent:"center" }}>
+            <Btn v="white" onClick={()=>{ setPage("dashboard"); setTab("write"); }} style={{ fontSize:"0.93rem", padding:"0.75rem 2.2rem", borderRadius:10 }}>{T.cta_btn}</Btn>
+            <Btn v="ghostW" onClick={()=>{ setPage("dashboard"); setTab("simplify"); }} style={{ fontSize:"0.93rem", padding:"0.75rem 2.2rem", borderRadius:10 }}>🔄 Simplify Letter</Btn>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const Login = (
+    <div style={{ maxWidth:400, margin:"4rem auto", padding:"0 1rem" }}>
+      <div style={{ background:"#fff", border:"1px solid #eae8e2", borderRadius:18, padding:"2.2rem 1.8rem", boxShadow:"0 4px 24px rgba(0,0,0,0.06)" }}>
+        <div style={{ fontSize:"2rem", marginBottom:"0.4rem" }}>🔐</div>
+        <h2 style={{ fontSize:"1.45rem", fontWeight:900, marginBottom:"0.3rem", letterSpacing:"-0.5px" }}>{T.login_title}</h2>
+        <p style={{ fontSize:"0.83rem", color:"#888", marginBottom:"1.5rem" }}>{T.login_sub}</p>
+        <Label>{T.login_name}</Label>
+        <Input value={lf.name} onChange={e=>setLf(x=>({...x,name:e.target.value}))} placeholder={T.login_name_ph} style={{ marginBottom:"0.9rem" }} />
+        <Label>{T.login_email}</Label>
+        <Input value={lf.email} onChange={e=>setLf(x=>({...x,email:e.target.value}))} placeholder={T.login_email_ph} style={{ marginBottom:"1.1rem" }} />
+        <Btn v="fill" onClick={login} full style={{ padding:"0.85rem", fontSize:"0.92rem" }}>{T.login_btn}</Btn>
+        <Btn v="ghost" onClick={()=>setPage("dashboard")} full style={{ padding:"0.72rem", fontSize:"0.84rem", marginTop:"0.5rem" }}>{T.login_skip}</Btn>
+      </div>
+    </div>
+  );
+
+  const SimplifyPanel = (
+    <div>
+      <div style={{ background:"linear-gradient(135deg,#3a1470,#5a2d8a)", borderRadius:14, padding:"1.4rem 1.6rem", marginBottom:"1.2rem", position:"relative", overflow:"hidden" }}>
+        <div style={{ position:"absolute", right:-10, top:-10, fontSize:"5rem", opacity:0.08, pointerEvents:"none" }}>🔄</div>
+        <div style={{ display:"flex", alignItems:"flex-start", gap:"1rem" }}>
+          <div style={{ fontSize:"2rem", flexShrink:0 }}>🔄</div>
+          <div>
+            <div style={{ fontWeight:900, fontSize:"1.05rem", color:"#fff", marginBottom:"0.25rem" }}>{T.simplify_title}</div>
+            <div style={{ fontSize:"0.78rem", color:"rgba(255,255,255,0.65)", lineHeight:1.5, maxWidth:480 }}>{T.simplify_sub}</div>
+          </div>
+        </div>
+        <div style={{ display:"flex", gap:"0.4rem", marginTop:"1rem", flexWrap:"wrap" }}>
+          {["🏛 Govt Notice","⚖️ Legal Notice","🏦 Bank Letter","📋 Insurance Doc","📜 Tax Notice","🏥 Hospital Bill","🏠 Property Doc"].map(tag=>(
+            <span key={tag} style={{ fontSize:"0.65rem", background:"rgba(255,255,255,0.12)", color:"rgba(255,255,255,0.8)", borderRadius:20, padding:"0.2rem 0.7rem", border:"1px solid rgba(255,255,255,0.2)", fontWeight:600 }}>{tag}</span>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"1rem" }}>
+        <Card>
+          <CardHead label="📥 Paste Complex Letter" right={<span style={{ fontSize:"0.68rem", color:"#bbb", fontWeight:600 }}>{wordCount} words</span>} />
+          <div style={{ padding:"1.2rem" }}>
+            <Textarea value={simplifyText} onChange={e=>{ setSimplifyText(e.target.value); setWordCount(e.target.value.trim().split(/\s+/).filter(Boolean).length); }} placeholder={T.simplify_paste_ph} rows={12} style={{ background:"#fdfcf8", border:"1.5px dashed #d4e8dc" }} />
+            {simplifyText && <button onClick={()=>{ setSimplifyText(""); setWordCount(0); setSimplifyResult(null); }} style={{ marginTop:"0.4rem", fontSize:"0.72rem", color:"#aaa", background:"none", border:"none", cursor:"pointer", fontFamily:"inherit" }}>✕ Clear</button>}
+            <div style={{ marginTop:"1rem" }}>
+              <Label>{T.simplify_target}</Label>
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"0.35rem" }}>
+                {TRANSLATE_LANGS.map(l=>(
+                  <button key={l.code} onClick={()=>setSimplifyLang(l.code)} style={{ padding:"0.38rem 0.4rem", borderRadius:7, border:`1.5px solid ${simplifyLang===l.code?"#5a2d8a":"#eae8e2"}`, background:simplifyLang===l.code?"#f3edf8":"#fff", color:simplifyLang===l.code?"#5a2d8a":"#555", fontSize:"0.68rem", fontWeight:simplifyLang===l.code?800:500, cursor:"pointer", fontFamily:"inherit", textAlign:"center", lineHeight:1.3 }}>
+                    {l.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {simplifyErr && <div style={{ background:"#fdf2f2", border:"1px solid #f5c6c6", color:"#b03020", borderRadius:8, padding:"0.6rem 0.8rem", fontSize:"0.8rem", marginTop:"0.8rem" }}>⚠️ {simplifyErr}</div>}
+            <Btn v="purple" onClick={doSimplify} disabled={simplifyLoading} full style={{ marginTop:"1rem", padding:"0.88rem", fontSize:"0.92rem" }}>
+              {simplifyLoading ? <span style={{ display:"flex", alignItems:"center", gap:"0.5rem" }}><Spinner/> Analyzing…</span> : T.simplify_btn}
+            </Btn>
+          </div>
+        </Card>
+
+        <div>
+          {!simplifyResult && !simplifyLoading && (
+            <div style={{ background:"#fff", border:"1.5px dashed #e0ddd6", borderRadius:14, padding:"3rem 2rem", textAlign:"center", height:"100%", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:"0.8rem" }}>
+              <div style={{ fontSize:"3rem", opacity:0.3 }}>📄</div>
+              <div style={{ fontSize:"0.85rem", fontWeight:700, color:"#bbb" }}>Your simplified letter will appear here</div>
+              <div style={{ fontSize:"0.75rem", color:"#ccc" }}>Paste a letter on the left and click Simplify</div>
+            </div>
+          )}
+          {simplifyLoading && (
+            <div style={{ background:"#fff", border:"1px solid #eae8e2", borderRadius:14, padding:"3rem 2rem", textAlign:"center", height:"100%", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:"1rem" }}>
+              <div style={{ width:48, height:48, border:"3px solid #e8e0f0", borderTopColor:"#5a2d8a", borderRadius:"50%", animation:"spin .8s linear infinite" }} />
+              <div style={{ fontSize:"0.88rem", fontWeight:700, color:"#5a2d8a" }}>AI is reading your letter…</div>
+              <div style={{ fontSize:"0.73rem", color:"#aaa" }}>Extracting key points & translating</div>
+            </div>
+          )}
+          {simplifyResult && (
+            <Card>
+              {simplifyResult.sender && (
+                <div style={{ background:"#faf8ff", borderBottom:"1px solid #ede8f8", padding:"0.75rem 1.2rem", display:"flex", alignItems:"center", gap:"0.6rem" }}>
+                  <span style={{ fontSize:"0.7rem", fontWeight:800, color:"#5a2d8a", textTransform:"uppercase", letterSpacing:"0.08em" }}>🏛 Sender</span>
+                  <span style={{ fontSize:"0.82rem", fontWeight:700, color:"#333" }}>{simplifyResult.sender}</span>
+                </div>
+              )}
+              <div style={{ display:"flex", gap:"0.5rem", padding:"0.75rem 1.2rem", borderBottom:"1px solid #eae8e2", flexWrap:"wrap" }}>
+                {simplifyResult.deadline && simplifyResult.deadline!=="Not specified" && (
+                  <span style={{ display:"inline-flex", alignItems:"center", gap:"0.3rem", background:"#fdf2f2", color:"#b03020", borderRadius:20, fontSize:"0.68rem", fontWeight:800, padding:"0.2rem 0.7rem", border:"1px solid #f5c6c6" }}>⏰ {simplifyResult.deadline}</span>
+                )}
+                {simplifyResult.action_required && simplifyResult.action_required!=="No action required" && (
+                  <span style={{ display:"inline-flex", alignItems:"center", gap:"0.3rem", background:"#fff7e0", color:"#a07020", borderRadius:20, fontSize:"0.68rem", fontWeight:800, padding:"0.2rem 0.7rem", border:"1px solid #f0d88a" }}>⚡ Action needed</span>
+                )}
+              </div>
+              <div style={{ display:"flex", gap:"0", borderBottom:"1px solid #eae8e2" }}>
+                {[["summary","📋 Summary"],["simple","📝 Simplified"],["translation","🌐 Translation"]].map(([id,label])=>(
+                  <button key={id} onClick={()=>setSimplifyTab(id)} style={{ flex:1, padding:"0.7rem 0.5rem", border:"none", borderBottom:`2.5px solid ${simplifyTab===id?"#5a2d8a":"transparent"}`, background:simplifyTab===id?"#faf8ff":"transparent", color:simplifyTab===id?"#5a2d8a":"#888", fontSize:"0.72rem", fontWeight:simplifyTab===id?800:600, cursor:"pointer", fontFamily:"inherit", transition:"all .15s" }}>{label}</button>
+                ))}
+              </div>
+              <div style={{ padding:"1.2rem" }}>
+                {simplifyTab==="summary" && (
+                  <div>
+                    <div style={{ background:"#f3edf8", border:"1px solid #e0d0f0", borderRadius:10, padding:"1rem 1.1rem", marginBottom:"1rem" }}>
+                      <div style={{ fontSize:"0.65rem", fontWeight:800, color:"#5a2d8a", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:"0.5rem" }}>📋 What this letter says</div>
+                      <div style={{ fontSize:"0.88rem", color:"#222", lineHeight:1.75 }}>{simplifyResult.summary}</div>
+                    </div>
+                    {simplifyResult.key_points?.length > 0 && (
+                      <div style={{ marginBottom:"1rem" }}>
+                        <div style={{ fontSize:"0.65rem", fontWeight:800, color:"#555", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:"0.6rem" }}>🔑 Key Points</div>
+                        {simplifyResult.key_points.map((pt,i)=>(
+                          <div key={i} style={{ display:"flex", gap:"0.6rem", alignItems:"flex-start", marginBottom:"0.5rem" }}>
+                            <div style={{ width:20, height:20, borderRadius:"50%", background:"#e8f5ee", color:G, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"0.62rem", fontWeight:900, flexShrink:0, marginTop:2 }}>{i+1}</div>
+                            <div style={{ fontSize:"0.82rem", color:"#333", lineHeight:1.55 }}>{pt}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {simplifyResult.action_required && (
+                      <div style={{ background:"#fffbeb", border:"1px solid #f0d88a", borderRadius:10, padding:"0.85rem 1rem" }}>
+                        <div style={{ fontSize:"0.65rem", fontWeight:800, color:"#a07020", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:"0.35rem" }}>⚡ What you need to do</div>
+                        <div style={{ fontSize:"0.85rem", color:"#444", lineHeight:1.6 }}>{simplifyResult.action_required}</div>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {simplifyTab==="simple" && (
+                  <div>
+                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"0.8rem" }}>
+                      <div style={{ fontSize:"0.65rem", fontWeight:800, color:"#555", textTransform:"uppercase", letterSpacing:"0.1em" }}>📝 Simplified Version</div>
+                      <Btn v="ghost" onClick={()=>copyText(simplifyResult.simplified_letter,"simple",setSimplCopied)} style={{ fontSize:"0.72rem", padding:"0.3rem 0.7rem" }}>{simplCopied==="simple" ? "✓ Copied!" : "⧉ Copy"}</Btn>
+                    </div>
+                    <div style={{ background:"#fdfcf8", border:"1px solid #eae8e2", borderRadius:10, padding:"1.1rem 1.2rem", fontSize:"0.88rem", lineHeight:1.85, color:"#1a1a1a", whiteSpace:"pre-wrap", fontFamily:"Georgia,serif", maxHeight:340, overflowY:"auto" }}>{simplifyResult.simplified_letter}</div>
+                  </div>
+                )}
+                {simplifyTab==="translation" && (
+                  <div>
+                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"0.8rem" }}>
+                      <div style={{ fontSize:"0.65rem", fontWeight:800, color:"#5a2d8a", textTransform:"uppercase", letterSpacing:"0.1em" }}>🌐 {TRANSLATE_LANGS.find(l=>l.code===simplifyLang)?.label || "Translation"}</div>
+                      <Btn v="ghost" onClick={()=>copyText(simplifyResult.translation,"trans",setSimplCopied)} style={{ fontSize:"0.72rem", padding:"0.3rem 0.7rem" }}>{simplCopied==="trans" ? "✓ Copied!" : "⧉ Copy"}</Btn>
+                    </div>
+                    <div style={{ background:"#faf8ff", border:"1px solid #ede8f8", borderRadius:10, padding:"1.1rem 1.2rem", fontSize:"0.9rem", lineHeight:1.9, color:"#1a1a1a", whiteSpace:"pre-wrap", fontFamily:"Georgia,serif", maxHeight:340, overflowY:"auto" }}>{simplifyResult.translation}</div>
+                  </div>
+                )}
+              </div>
+            </Card>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  const Dashboard = (
+    <div style={{ maxWidth:960, margin:"0 auto", padding:"2rem 1.2rem" }}>
+      {user && (
+        <div style={{ background:"linear-gradient(135deg,#0c2e1d,#1a5c3a)", borderRadius:14, padding:"1.2rem 1.6rem", marginBottom:"1.2rem", display:"flex", alignItems:"center", gap:"1rem" }}>
+          <div style={{ width:44, height:44, borderRadius:"50%", background:"rgba(255,255,255,0.18)", color:"#fff", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:900, fontSize:"1.1rem", flexShrink:0 }}>{user.av}</div>
+          <div>
+            <div style={{ fontWeight:800, fontSize:"1rem", color:"#fff" }}>{user.isNew?T.dash_welcome:T.dash_welcome_back} {user.name} 👋</div>
+            <div style={{ fontSize:"0.76rem", color:"rgba(255,255,255,0.55)" }}>{user.email} · {history.length} {T.dash_filed}</div>
+          </div>
+        </div>
+      )}
+      <div style={{ display:"flex", gap:"0.45rem", marginBottom:"1.1rem", flexWrap:"wrap" }}>
+        {[
+          ["write",T.tab_write,"#1a5c3a","#e8f5ee"],
+          ["templates",T.tab_templates,"#1a5c3a","#e8f5ee"],
+          ...(user?[["history",T.tab_history,"#1a5c3a","#e8f5ee"]]:[] ),
+          ["simplify",T.tab_simplify,"#5a2d8a","#f3edf8"],
+        ].map(([id,label,ac,abg])=>(
+          <button key={id} onClick={()=>setTab(id)} style={{ display:"inline-flex", alignItems:"center", gap:"0.35rem", padding:"0.5rem 1.1rem", borderRadius:8, border:`1.5px solid ${tab===id?ac:"#eae8e2"}`, background:tab===id?abg:"#fff", color:tab===id?ac:"#555", fontFamily:"inherit", fontWeight:tab===id?800:600, fontSize:"0.79rem", cursor:"pointer", transition:"all .15s" }}>
+            {label}
+            {id==="simplify" && <span style={{ fontSize:"0.58rem", background:"#5a2d8a", color:"#fff", padding:"0.05rem 0.45rem", borderRadius:20, fontWeight:800 }}>NEW</span>}
+          </button>
+        ))}
+      </div>
+
+      {tab==="write" && (
+        <Card>
+          <CardHead label={T.form_title} />
+          <div style={{ padding:"1.4rem" }}>
+            <p style={{ fontSize:"0.78rem", color:"#888", marginBottom:"1rem" }}>{T.form_sub}</p>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"0.9rem", marginBottom:"1rem" }}>
+              <div><Label>{T.form_name} <span style={{ color:"#e05050", fontWeight:900 }}>*</span></Label><Input value={fname} onChange={e=>setFname(e.target.value)} placeholder={T.form_name_ph} /></div>
+              <div><Label>{T.form_loc} <span style={{ color:"#e05050", fontWeight:900 }}>*</span></Label><Input value={floc}  onChange={e=>setFloc(e.target.value)}  placeholder={T.form_loc_ph} /></div>
+            </div>
+            <div style={{ marginBottom:"1rem" }}>
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"0.45rem" }}>
+                <Label style={{ margin:0 }}>{T.form_desc}</Label>
+                {img && <span style={{ fontSize:"0.65rem", background:"#e8f5ee", color:G, borderRadius:20, padding:"0.1rem 0.6rem", fontWeight:800 }}>📸 Optional — photo uploaded</span>}
+              </div>
+              <Textarea value={fdesc} onChange={e=>{setFdesc(e.target.value);setTpl(null);}} placeholder={T.form_desc_ph} rows={4} />
+              <div style={{ display:"flex", gap:"0.4rem", marginTop:"0.5rem", flexWrap:"wrap" }}>
+                <button onClick={()=>startMic("desc")} style={{ display:"flex", alignItems:"center", gap:"0.3rem", padding:"0.38rem 0.75rem", borderRadius:7, border:`1.5px solid ${micStatus==="listening"&&activeMicField==="desc"?"#b03020":"#eae8e2"}`, background:micStatus==="listening"&&activeMicField==="desc"?"#fdf2f2":"#f8f7f3", color:micStatus==="listening"&&activeMicField==="desc"?"#b03020":"#555", cursor:"pointer", fontFamily:"inherit", fontSize:"0.75rem", fontWeight:700 }}>
+                  {micStatus==="listening"&&activeMicField==="desc"?T.btn_listening:T.btn_speak}
+                </button>
+                <button onClick={()=>fileRef.current.click()} style={{ display:"flex", alignItems:"center", gap:"0.3rem", padding:"0.38rem 0.75rem", borderRadius:7, border:`1.5px solid ${img?"#1a5c3a":"#eae8e2"}`, background:img?"#e8f5ee":"#f8f7f3", color:img?G:"#888", cursor:"pointer", fontFamily:"inherit", fontSize:"0.75rem", fontWeight:700 }}>{T.btn_photo}{img && " ✓"}</button>
+                <input ref={fileRef} type="file" accept="image/*" style={{ display:"none" }} onChange={pickImg} />
+              </div>
+              {imgPrev && (
+                <div style={{ marginTop:"0.6rem", position:"relative", display:"inline-block" }}>
+                  <img src={imgPrev} alt="" style={{ maxHeight:100, borderRadius:7, border:"2px solid #1a5c3a", display:"block" }} />
+                  <button onClick={()=>{setImg(null);setImgPrev(null);}} style={{ position:"absolute", top:4, right:4, background:"rgba(0,0,0,0.5)", color:"#fff", border:"none", borderRadius:"50%", width:18, height:18, cursor:"pointer", fontSize:"0.6rem", display:"flex", alignItems:"center", justifyContent:"center" }}>✕</button>
+                  <div style={{ marginTop:"0.3rem", fontSize:"0.68rem", color:G, fontWeight:700 }}>✓ AI will auto-detect issue from photo</div>
+                </div>
+              )}
+            </div>
+            <div style={{ marginBottom:"1rem" }}>
+              <Label>{T.form_support} <span style={{ color:"#ccc", fontWeight:500, textTransform:"none", fontSize:"0.65rem" }}>({T.form_optional})</span></Label>
+              <Textarea value={fsupport} onChange={e=>setFsupport(e.target.value)} placeholder={T.form_support_ph} rows={2} />
+            </div>
+            {tpl && <div style={{ background:"#e8f5ee", border:"1px solid #c5ddd0", borderRadius:8, padding:"0.5rem 0.8rem", marginBottom:"0.8rem", fontSize:"0.78rem", fontWeight:700, color:G, display:"flex", alignItems:"center", gap:"0.5rem" }}>{TEMPLATES.find(t=>t.id===tpl)?.icon} {TEMPLATES.find(t=>t.id===tpl)?.label} template<button onClick={()=>{setTpl(null);setFdesc("");}} style={{ marginLeft:"auto", background:"none", border:"none", cursor:"pointer", color:"#888", fontWeight:700 }}>✕</button></div>}
+            {err && <div style={{ background:"#fdf2f2", border:"1px solid #f5c6c6", color:"#b03020", borderRadius:8, padding:"0.6rem 0.8rem", fontSize:"0.8rem", marginBottom:"0.8rem" }}>⚠️ {err}</div>}
+            <Btn v="fill" onClick={go} disabled={loading} full style={{ padding:"0.88rem", fontSize:"0.92rem" }}>
+              {loading?<span style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:"0.5rem" }}><Spinner/> Generating…</span>:T.btn_submit}
+            </Btn>
+          </div>
+        </Card>
+      )}
+
+      {tab==="templates" && (
+        <div>
+          <p style={{ fontSize:"0.82rem", color:"#888", marginBottom:"1rem" }}>Select a template to pre-fill your complaint description.</p>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:"0.8rem" }}>
+            {TEMPLATES.map(t=>(
+              <div key={t.id} onClick={()=>applyTpl(t)} style={{ background:"#fff", border:`2px solid ${tpl===t.id?t.color:"#eae8e2"}`, borderRadius:12, padding:"1.1rem 1.2rem", cursor:"pointer", display:"flex", gap:"0.9rem", alignItems:"flex-start" }}>
+                <div style={{ width:42, height:42, background:t.bg, borderRadius:10, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"1.5rem", flexShrink:0 }}>{t.icon}</div>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ fontSize:"0.85rem", fontWeight:800, color:t.color, marginBottom:"0.2rem" }}>{t.label}</div>
+                  <div style={{ fontSize:"0.72rem", color:"#888", lineHeight:1.45, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>{t.text}</div>
+                </div>
+                {tpl===t.id && <span style={{ fontSize:"0.68rem", background:t.color, color:"#fff", padding:"0.1rem 0.55rem", borderRadius:20, flexShrink:0, fontWeight:800, alignSelf:"flex-start" }}>✓</span>}
+              </div>
+            ))}
+          </div>
+          {tpl && <Btn v="fill" onClick={()=>setTab("write")} style={{ marginTop:"1rem", padding:"0.78rem 2rem" }}>{T.tpl_edit}</Btn>}
+        </div>
+      )}
+
+      {tab==="history" && user && (
+        <Card>
+          <CardHead label={T.hist_title} />
+          {history.map((h,i)=>{
+            const s=SEV[h.sev]||SEV.Moderate;
+            return (
+              <div key={h.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"0.9rem 1.4rem", borderBottom:i<history.length-1?"1px solid #f2f0ea":"none" }}>
+                <div><div style={{ fontSize:"0.84rem", fontWeight:700, marginBottom:"0.15rem" }}>{h.type}</div><div style={{ fontSize:"0.73rem", color:"#888" }}>{h.snippet}</div></div>
+                <div style={{ textAlign:"right", flexShrink:0, marginLeft:"1rem" }}>
+                  <div style={{ fontSize:"0.7rem", color:"#bbb", marginBottom:"0.2rem" }}>{h.date}</div>
+                  <Badge color={s.c} bg={s.bg}>{s.emoji} {h.sev}</Badge>
+                </div>
+              </div>
+            );
+          })}
+        </Card>
+      )}
+
+      {tab==="simplify" && SimplifyPanel}
+    </div>
+  );
+
+  const Result = result && (
+    <div style={{ maxWidth:900, margin:"0 auto", padding:"2rem 1.2rem" }}>
+      <div style={{ display:"flex", alignItems:"center", gap:"0.8rem", marginBottom:"1.5rem" }}>
+        <Btn v="ghost" onClick={()=>setPage("dashboard")} style={{ fontSize:"0.8rem" }}>{T.back}</Btn>
+        <div style={{ flex:1, height:1, background:"#eae8e2" }} />
+        <div style={{ fontSize:"0.72rem", color:"#aaa", fontWeight:600 }}>{fname&&`${fname} · `}{floc&&floc}</div>
+      </div>
+      <div style={{ background:"#fff", border:"1px solid #eae8e2", borderRadius:16, overflow:"hidden", marginBottom:"1.2rem", boxShadow:"0 2px 20px rgba(0,0,0,0.06)" }}>
+        <div style={{ background:`linear-gradient(135deg,#0c2e1d,${G})`, padding:"1.1rem 1.5rem", display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:"0.6rem" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:"0.7rem" }}>
+            <span style={{ fontSize:"1.4rem" }}>📄</span>
+            <div>
+              <div style={{ fontWeight:900, fontSize:"0.95rem", color:"#fff", letterSpacing:"-0.3px" }}>{T.result_formats}</div>
+              <div style={{ fontSize:"0.68rem", color:"rgba(255,255,255,0.6)", marginTop:"0.1rem" }}>{result.issue_type} · {result.detected_language}</div>
+            </div>
+          </div>
+          <div style={{ display:"flex", gap:"0.4rem", flexWrap:"wrap" }}>
+            {FMTS.map(f=>(
+              <button key={f.id} onClick={()=>{ setFmt(f.id); setIsEditing(false); }} style={{ padding:"0.3rem 0.75rem", borderRadius:20, border:"none", background:fmt===f.id?"#fff":"rgba(255,255,255,0.15)", color:fmt===f.id?G:"#fff", fontSize:"0.74rem", fontWeight:700, cursor:"pointer", fontFamily:"inherit" }}>{f.icon} {f.label}</button>
+            ))}
+          </div>
+        </div>
+        <div style={{ padding:"2rem 2.2rem", background:"#fdfcf8", minHeight:240, position:"relative" }}>
+          <div style={{ position:"absolute", inset:0, backgroundImage:"repeating-linear-gradient(transparent,transparent 31px,#f0ede6 31px,#f0ede6 32px)", pointerEvents:"none", opacity:0.5 }} />
+          <div style={{ position:"relative", zIndex:1 }}>
+            {isEditing && fmt==="formal"
+              ? <textarea value={editedLetter} onChange={e=>setEditedLetter(e.target.value)} style={{ width:"100%", minHeight:220, padding:"0.5rem", fontFamily:"Georgia,serif", fontSize:"0.95rem", lineHeight:2, background:"transparent", border:"none", outline:"none", resize:"vertical", boxSizing:"border-box", color:"#1a1a1a" }} />
+              : <div style={{ fontFamily:"Georgia,serif", fontSize:"0.95rem", lineHeight:2, color:"#1a1a1a", whiteSpace:"pre-wrap" }}>{fmt==="formal"?editedLetter:result.formats?.[fmt]}</div>
+            }
+          </div>
+        </div>
+        <div style={{ padding:"1rem 1.5rem", borderTop:"1px solid #eae8e2", display:"flex", gap:"0.5rem", flexWrap:"wrap", background:"#f8f7f3" }}>
+          <Btn v={copied?"outline":"ghost"} onClick={()=>copyText(isEditing&&fmt==="formal"?editedLetter:result?.formats?.[fmt]||"","c",k=>setCopied(k==="c"))} style={{ fontSize:"0.8rem" }}>{copied?T.result_copied:T.result_copy}</Btn>
+          {fmt==="formal" && <Btn v="ghost" onClick={()=>setIsEditing(e=>!e)} style={{ fontSize:"0.8rem" }}>{isEditing?T.result_done:T.result_edit}</Btn>}
+          {isEditing&&fmt==="formal" && <Btn v="ghost" onClick={()=>{ setEditedLetter(result.formats?.formal||""); setIsEditing(false); }} style={{ fontSize:"0.8rem", color:"#b03020" }}>{T.result_reset}</Btn>}
+          {result.formats?.whatsapp && <Btn v="ghost" href={`https://wa.me/?text=${encodeURIComponent(result.formats.whatsapp)}`} style={{ fontSize:"0.8rem" }}>{T.result_whatsapp}</Btn>}
+        </div>
+      </div>
+
+      {user ? (
+        <>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr", gap:"0.7rem", marginBottom:"1rem" }}>
+            <div style={{ background:sev.bg, border:`2px solid ${sev.c}40`, borderRadius:12, padding:"0.9rem 1rem", gridColumn:"span 2" }}>
+              <div style={{ fontSize:"0.6rem", fontWeight:900, textTransform:"uppercase", letterSpacing:"0.12em", color:sev.c, marginBottom:"0.35rem" }}>⚠ {T.result_severity}</div>
+              <div style={{ display:"flex", alignItems:"center", gap:"0.6rem", marginBottom:"0.4rem" }}>
+                <span style={{ fontSize:"1.6rem" }}>{sev.emoji}</span>
+                <span style={{ fontWeight:900, fontSize:"1.2rem", color:sev.c }}>{result.severity}</span>
+              </div>
+              <div style={{ height:6, background:"rgba(0,0,0,0.08)", borderRadius:4, overflow:"hidden", marginBottom:"0.4rem" }}>
+                <div style={{ height:"100%", width:`${sev.bar}%`, background:sev.c, borderRadius:4 }} />
+              </div>
+              <div style={{ fontSize:"0.74rem", color:"#555", fontStyle:"italic", lineHeight:1.5 }}>{result.severity_reason}</div>
+            </div>
+            <div style={{ background:"#fff", border:"1px solid #eae8e2", borderRadius:12, padding:"0.9rem 1rem" }}>
+              <div style={{ fontSize:"0.58rem", fontWeight:900, textTransform:"uppercase", letterSpacing:"0.12em", color:G, marginBottom:"0.4rem" }}>🏛 {T.result_authority}</div>
+              <div style={{ fontWeight:800, fontSize:"0.84rem", color:"#111", lineHeight:1.45 }}>{result.nearest_authority}</div>
+            </div>
+            <div style={{ background:"#fff", border:"1px solid #eae8e2", borderRadius:12, padding:"0.9rem 1rem" }}>
+              <div style={{ fontSize:"0.58rem", fontWeight:900, textTransform:"uppercase", letterSpacing:"0.12em", color:"#a07020", marginBottom:"0.4rem" }}>📮 {T.result_submission}</div>
+              <div style={{ fontWeight:800, fontSize:"0.84rem", color:"#111", lineHeight:1.45 }}>{result.submission_mode}</div>
+            </div>
+          </div>
+          <Card style={{ marginBottom:"1rem" }}>
+            <CardHead label={T.result_alt} />
+            <div style={{ padding:"1rem 1.4rem" }}>
+              {[result.alt_subject_1, result.alt_subject_2].filter(Boolean).map((s,i)=>(
+                <div key={i} style={{ display:"flex", alignItems:"center", gap:"0.7rem", background:"#f8f7f3", border:"1px solid #eae8e2", borderRadius:9, padding:"0.6rem 0.9rem", marginBottom:"0.5rem", cursor:"pointer" }} onClick={()=>navigator.clipboard?.writeText(s)}>
+                  <span style={{ fontSize:"0.75rem", fontWeight:800, color:G, background:"#e8f5ee", padding:"0.1rem 0.5rem", borderRadius:6, flexShrink:0 }}>Alt {i+1}</span>
+                  <span style={{ fontSize:"0.85rem", fontWeight:600, color:"#222", flex:1 }}>{s}</span>
+                  <span style={{ fontSize:"0.7rem", color:"#bbb" }}>copy</span>
+                </div>
+              ))}
+            </div>
+          </Card>
+          <div style={{ marginBottom:"1rem", borderRadius:14, overflow:"hidden", border:"1px solid #e0ddd6" }}>
+            <div style={{ background:"#f0eeea", padding:"0.9rem 1.4rem", display:"flex", alignItems:"center", justifyContent:"space-between", borderBottom:"1px solid #e0ddd6" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:"0.6rem" }}>
+                <span style={{ fontSize:"1.1rem" }}>🌐</span>
+                <div>
+                  <div style={{ fontWeight:800, fontSize:"0.88rem", color:"#222" }}>{T.result_trans}</div>
+                  <div style={{ fontSize:"0.66rem", color:"#888", marginTop:"0.05rem" }}>Translated into <span style={{ fontWeight:700, color:"#444" }}>{result.detected_language}</span></div>
+                </div>
+              </div>
+              <button onClick={()=>setShowTrans(t=>!t)} style={{ padding:"0.35rem 0.85rem", borderRadius:20, border:"1.5px solid #ccc", background:showTrans?"#e8e6e0":"#fff", color:"#444", fontSize:"0.74rem", fontWeight:700, cursor:"pointer", fontFamily:"inherit" }}>{showTrans?"Hide ▲":"Show ▼"}</button>
+            </div>
+            {showTrans && (
+              <div style={{ background:"#faf9f5", padding:"1.6rem 1.8rem" }}>
+                <div style={{ fontFamily:"Georgia,serif", fontSize:"0.94rem", lineHeight:2, color:"#222", whiteSpace:"pre-wrap" }}>{result.native_translation || "Translation not available."}</div>
+              </div>
+            )}
+          </div>
+          {result.schemes?.length>0 && (
+            <Card style={{ marginBottom:"1rem" }}>
+              <CardHead label={T.result_schemes} />
+              <div style={{ padding:"1.2rem 1.4rem" }}>
+                {result.schemes.map((s,i)=>(
+                  <div key={i} style={{ background:"#e8f5ee", border:"1px solid #c8ddd0", borderRadius:10, padding:"0.85rem 1rem", marginBottom:"0.6rem", display:"flex", gap:"0.8rem", alignItems:"flex-start" }}>
+                    <div style={{ width:32, height:32, background:G, borderRadius:8, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontSize:"1rem" }}>📌</div>
+                    <div>
+                      <div style={{ fontWeight:900, fontSize:"0.85rem", color:G, marginBottom:"0.2rem" }}>{s.name}</div>
+                      <div style={{ fontSize:"0.74rem", color:"#555", lineHeight:1.5 }}>{s.description} · <a href={`https://${s.link}`} target="_blank" rel="noreferrer" style={{ color:G, fontWeight:700 }}>{s.link}</a></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+        </>
+      ) : (
+        <div style={{ background:"linear-gradient(135deg,#0c2e1d,#1a5c3a)", borderRadius:16, padding:"1.8rem 2rem", textAlign:"center", marginBottom:"1rem" }}>
+          <div style={{ fontSize:"1.5rem", marginBottom:"0.4rem" }}>🔐</div>
+          <div style={{ fontWeight:900, fontSize:"1.1rem", color:"#fff", marginBottom:"0.35rem" }}>Login for the full report</div>
+          <div style={{ fontSize:"0.84rem", color:"rgba(255,255,255,0.65)", marginBottom:"1.2rem", lineHeight:1.6 }}>Severity analysis · Nearest authority · Govt. schemes · Native translation · Complaint history</div>
+          <Btn v="white" onClick={()=>setPage("login")} style={{ fontSize:"0.9rem", padding:"0.7rem 1.8rem" }}>Login / Sign up — it's free</Btn>
+        </div>
+      )}
+      <div style={{ height:"2rem" }} />
+    </div>
+  );
+
+  return (
+    <div style={{ fontFamily:"'Segoe UI',system-ui,sans-serif", background:"#f8f7f3", minHeight:"100vh", color:"#111" }}
+      onClick={()=>{ setShowLangMenu(false); setShowUserMenu(false); }}>
+      {Nav}
+      {page==="home"      && Home}
+      {page==="login"     && Login}
+      {page==="dashboard" && Dashboard}
+      {page==="result"    && Result}
+      <footer style={{ textAlign:"center", padding:"1.6rem", fontSize:"0.7rem", color:"#bbb", borderTop:"1px solid #eae8e2", marginTop:"1rem" }}>
+        {T.footer} <span style={{ color:"#111", fontWeight:800 }}>Lingua</span><span style={{ color:G, fontWeight:800 }}>Bridge</span> © 2025
+      </footer>
+      <style>{`
+        @keyframes spin { to { transform:rotate(360deg); } }
+        * { box-sizing:border-box; margin:0; padding:0; }
+        input:focus, textarea:focus { border-color:${G} !important; box-shadow:0 0 0 3px rgba(26,92,58,.1); }
+        button:not(:disabled):hover { opacity:0.83; }
+        ::-webkit-scrollbar { width:5px; } ::-webkit-scrollbar-thumb { background:#ddd; border-radius:4px; }
+      `}</style>
+    </div>
+  );
+}
